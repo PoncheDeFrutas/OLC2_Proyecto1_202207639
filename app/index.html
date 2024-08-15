@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page with Code Editor</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="header">
+    <div class="header-left">
+        <span>OakLand</span>
+    </div>
+    <div class="header-right">
+        <button id="create-tab" class="btn">Nuevo Editor</button>
+        <button id="open-file" class="btn">Abrir Archivo</button>
+        <input type="file" id="file-input" style="display: none;" />
+        <button id="save-file" class="btn">Guardar Archivo</button>
+        <button id="execute" class="btn">Ejecutar</button>
+
+
+        <button id="toggle-to-single" class="btn">Vista Única</button>
+        <button id="report1" class="btn report-btn" style="display: none;">Reporte 1</button>
+        <button id="report2" class="btn report-btn" style="display: none;">Reporte 2</button>
+        <button id="toggle-to-double" class="btn report-btn" style="display: none;">Vista Doble</button>
+    </div>
+</div>
+
+<div class="container">
+    <div class="left-section">
+        <div id="tabs" class="tabs">
+            <!-- Tabs will be added here -->
+        </div>
+        <div id="editor-container" class="editor-container">
+            <!-- Editor panels will be added here -->
+        </div>
+    </div>
+    <div class="divider"></div>
+    <div class="right-section">
+        <label for="info-area"></label><textarea id="info-area" class="info-area" readonly>This is a non-editable text area that looks like the code editor.</textarea>
+    </div>
+</div>
+<script src="pages/scripts.js"></script>
+<script src="pages/file-handler.js"></script>
+</body>
+</html>
