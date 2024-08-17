@@ -1,57 +1,137 @@
-start
-    = _ aux* _
+{
+    const createNode = (typeNode, props) => {
+        const type = {
+            'Literal': nodes.Literal,
+            'Unary': nodes.UnaryOperation,
+            'Arithmetic': nodes.ArithmeticOperation,
+            'Relational': nodes.RelationalOperation,
+            'Logical': nodes.LogicalOperation,
+            'Group': nodes.Group,
 
-aux
-    = dataType _
-    / Comment _
+        }
+
+        const node = new type[typeNode](props)
+        node.location = location()
+        return node
+    }
+}
 
 
-/* -----------------------------Data Types----------------------------- */
-dataType
-    = number
-    / boolean
-    / string
-    / char
-    / id
+Expression
+    = OR
 
-number
-    = float
-    / integer
+OR
+    = le:AND expansion:(
+        _ "||" _ ri:AND { return { type: '||', ri } }
+    )* {
+        return expansion.reduce(
+            (acc, curr) => {
+                const { type, ri } = curr
+                return createNode('Logical', { op: type, le: acc, ri })
+            },
+            le
+        )
+    }
 
-integer
-    = [0-9]+ { console.log("integer", text()); }
+AND
+    = le:Equality expansion:(
+        _ "&&" _ ri:Equality { return { type: '&&', ri } }
+    )* {
+        return expansion.reduce(
+            (acc, curr) => {
+                const { type, ri } = curr
+                return createNode('Logical', { op: type, le: acc, ri })
+            },
+            le
+        )
+    }
 
-float
-    = [0-9]+ "." [0-9]+ { console.log("float", text()); }
+Equality
+    = le:Relational expansion:(
+        _ op:("==" / "!=") _ ri:Relational { return { type: op, ri } }
+    )* {
+        return expansion.reduce(
+            (acc, curr) => {
+                const { type, ri } = curr
+                return createNode('Relational', { op: type, le: acc, ri })
+            },
+            le
+        )
+    }
 
-boolean
-    = ("true" / "false") { console.log("boolean", text()); }
+Relational
+    = le:Sum expansion:(
+        _ op:("<=" / ">=" / "<" / ">") _ ri:Sum { return { type: op, ri } }
+    )* {
+        return expansion.reduce(
+            (acc, curr) => {
+                const { type, ri } = curr
+                return createNode('Relational', { op: type, le: acc, ri })
+            },
+            le
+        )
+    }
 
-string
-    = "\"" [^\"]* "\"" { console.log("string", text()); }
+Sum
+    = le:Mul expansion:(
+        _ op:("+" / "-") _ ri:Mul { return { type: op, ri } }
+    )* {
+        return expansion.reduce(
+            (acc, curr) => {
+                const { type, ri } = curr
+                return createNode('Arithmetic', { op: type, le: acc, ri })
+            },
+            le
+        )
+    }
 
-char
-    = "'" [^']* "'" { console.log("char", text()); }
+Mul
+    = le:Unary expansion:(
+        _ op:("*" / "/") _ ri:Unary { return { type: op, ri } }
+    )* {
+        return expansion.reduce(
+            (acc, curr) => {
+                const { type, ri } = curr
+                return createNode('Arithmetic', { op: type, le: acc, ri })
+            },
+            le
+        )
+    }
 
-id
-    = [a-zA-Z_][a-zA-Z0-9_]* { console.log("id", text()); }
 
-/* -------------------------------------------------------------------- */
+Unary
+    = "-" _ dt:DataType { return createNode('Unary', { op: '-', exp: dt }) }
+    / "!" _ dt:DataType { return createNode('Unary', { op: '!', exp: dt }) }
+    / DataType
 
-/* ------------------------------Comments------------------------------ */
-Comment
-    = SimpleComment
-    / BlockComment
 
-SimpleComment
-    = "//" (!EndComment .)* EndComment  { console.log("SimpleComment", text()); }
+DataType
+    = Number
+    / Boolean
+    / String
+    / Char
 
-EndComment
-    = "\r" / "\n" / "\r\n" / !.
+Number
+    = Float
+    / Integer
 
-BlockComment
-    = "/*" (!"*/" .)* "*/"      { console.log("BlockComment", text()); }
+Integer
+    = [0-9]+ { return createNode('Literal', { value: parseInt(text()), type: 'int' }) }
+
+Float
+    = [0-9]+ "." [0-9]+ { return createNode('Literal', { value: parseFloat(text(), 10), type: 'float' }) }
+
+Boolean
+    = ("true" / "false") { return createNode('Literal', { value: text() === "true" ? true : false, type: 'bool' }) }
+
+String
+    = "\"" [^\"]* "\"" { return createNode('Literal', { value: text().slice(1, -1), type: 'string' }) }
+
+Char
+    = "'" [^']* "'" { return createNode('Literal', { value: text().slice(1, -1), type: 'char' }) }
+
+Id
+    = [a-zA-Z_][a-zA-Z0-9_]* { return text(); }
 
 _
     = [ \t\n\r]*
-/* -------------------------------------------------------------------- */
