@@ -1,4 +1,5 @@
 import { Literal } from '../ast/nodes.js';
+
 /**
  * @param {string} op
  * @param {Literal} left
@@ -6,23 +7,17 @@ import { Literal } from '../ast/nodes.js';
  * @returns {Literal}
  * @throws {Error}
  */
-
 export function LogicalOperation(op, left, right) {
     if (left.type !== 'bool' || right.type !== 'bool') {
-        throw new Error(`Operands types are not valid ${left.type} y ${right.type}`);
+        throw new Error(`Invalid operand types: ${left.type} and ${right.type}. Both operands must be of type 'bool'.`);
     }
 
-    let result;
     switch (op) {
         case '&&':
-            result = left.value && right.value;
-            break;
+            return new Literal({ value: left.value && right.value, type: 'bool' });
         case '||':
-            result = left.value || right.value;
-            break;
+            return new Literal({ value: left.value || right.value, type: 'bool' });
         default:
-            throw new Error(`Operator ${op} not implemented`);
+            throw new Error(`Unsupported logical operator: ${op}`);
     }
-
-    return new Literal({ value: result, type: 'bool' });
 }

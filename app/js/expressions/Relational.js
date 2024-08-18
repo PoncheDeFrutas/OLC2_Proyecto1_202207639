@@ -1,4 +1,5 @@
 import { Literal } from '../ast/nodes.js';
+
 /**
  * @param {string} op
  * @param {Literal} left
@@ -6,45 +7,30 @@ import { Literal } from '../ast/nodes.js';
  * @returns {Literal}
  * @throws {Error}
  */
-
 export function RelationalOperation(op, left, right) {
     const rules = OperationRules[op];
-
-    const accepted = rules.find(([tl, tr]) =>
-        tl === left.type && tr === right.type
-    )
+    const accepted = rules.find(([tl, tr]) => tl === left.type && tr === right.type);
 
     if (!accepted) {
-        throw new Error(`Operands types are not valid' ${left.type} y ${right.type}`);
+        throw new Error(`Invalid operand types: ${left.type} and ${right.type}`);
     }
 
-    const [_, __, resultType] = accepted;
+    const resultType = accepted[2];
 
-    let result
+    const operations = {
+        '<': (a, b) => a < b,
+        '>': (a, b) => a > b,
+        '<=': (a, b) => a <= b,
+        '>=': (a, b) => a >= b,
+        '==': (a, b) => a === b,
+        '!=': (a, b) => a !== b,
+    };
 
-    switch (op) {
-        case '<':
-            result = left.value < right.value
-            break
-        case '>':
-            result = left.value > right.value
-            break
-        case '<=':
-            result = left.value <= right.value
-            break
-        case '>=':
-            result = left.value >= right.value
-            break
-        case '==':
-            result = left.value === right.value
-            break
-        case '!=':
-            result = left.value !== right.value
-            break
-        default:
-            throw new Error(`Operator ${op} not implemented`);
+    if (!(op in operations)) {
+        throw new Error(`Operator ${op} not implemented`);
     }
 
+    const result = operations[op](left.value, right.value);
     return new Literal({ value: result, type: resultType });
 }
 
@@ -55,7 +41,7 @@ function createCommonRules() {
         ['float', 'int', 'bool'],
         ['float', 'float', 'bool'],
         ['char', 'char', 'bool']
-    ]
+    ];
 }
 
 const OperationRules = {
@@ -63,8 +49,14 @@ const OperationRules = {
     '>': createCommonRules(),
     '<=': createCommonRules(),
     '>=': createCommonRules(),
-    '==': [...createCommonRules(),['string', 'string', 'bool'],
-        ['bool', 'bool', 'bool'],],
-    '!=': [...createCommonRules(),['string', 'string', 'bool'],
-        ['bool', 'bool', 'bool'],],
-}
+    '==': [
+        ...createCommonRules(),
+        ['string', 'string', 'bool'],
+        ['bool', 'bool', 'bool'],
+    ],
+    '!=': [
+        ...createCommonRules(),
+        ['string', 'string', 'bool'],
+        ['bool', 'bool', 'bool'],
+    ],
+};

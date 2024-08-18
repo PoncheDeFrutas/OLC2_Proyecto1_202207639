@@ -19,10 +19,28 @@
  * @typedef {import('./nodes').Group} Group
 
 
- * @typedef {import('./nodes').Identifier} Identifier
-
-
  * @typedef {import('./nodes').Literal} Literal
+
+
+ * @typedef {import('./nodes').VariableDeclaration} VariableDeclaration
+
+
+ * @typedef {import('./nodes').VariableValue} VariableValue
+
+
+ * @typedef {import('./nodes').Print} Print
+
+
+ * @typedef {import('./nodes').Assignment} Assignment
+
+
+ * @typedef {import('./nodes').ExpressionStatement} ExpressionStatement
+
+
+ * @typedef {import('./nodes').TernaryOperation} TernaryOperation
+
+
+ * @typedef {import('./nodes').Block} Block
 
  */
 
@@ -89,20 +107,74 @@ export class BaseVisitor {
     
 
     /**
-     * @param {Identifier} node
-     * @returns {any}
-     */
-    visitIdentifier(node) {
-        throw new Error('Method visitIdentifier not implemented');
-    }
-    
-
-    /**
      * @param {Literal} node
      * @returns {any}
      */
     visitLiteral(node) {
         throw new Error('Method visitLiteral not implemented');
+    }
+    
+
+    /**
+     * @param {VariableDeclaration} node
+     * @returns {any}
+     */
+    visitVariableDeclaration(node) {
+        throw new Error('Method visitVariableDeclaration not implemented');
+    }
+    
+
+    /**
+     * @param {VariableValue} node
+     * @returns {any}
+     */
+    visitVariableValue(node) {
+        throw new Error('Method visitVariableValue not implemented');
+    }
+    
+
+    /**
+     * @param {Print} node
+     * @returns {any}
+     */
+    visitPrint(node) {
+        throw new Error('Method visitPrint not implemented');
+    }
+    
+
+    /**
+     * @param {Assignment} node
+     * @returns {any}
+     */
+    visitAssignment(node) {
+        throw new Error('Method visitAssignment not implemented');
+    }
+    
+
+    /**
+     * @param {ExpressionStatement} node
+     * @returns {any}
+     */
+    visitExpressionStatement(node) {
+        throw new Error('Method visitExpressionStatement not implemented');
+    }
+    
+
+    /**
+     * @param {TernaryOperation} node
+     * @returns {any}
+     */
+    visitTernaryOperation(node) {
+        throw new Error('Method visitTernaryOperation not implemented');
+    }
+    
+
+    /**
+     * @param {Block} node
+     * @returns {any}
+     */
+    visitBlock(node) {
+        throw new Error('Method visitBlock not implemented');
     }
     
 }

@@ -22,14 +22,26 @@ function executeAction() {
         if (codeArea) {
             const content = codeArea.value;
 
+            const infoArea = document.getElementById('info-area');
+            if (infoArea) {
+                infoArea.value = "";
+            }
+            
+            
             const exp = parse(content);
             const interpreter = new InterpreterVisitor()
-            const result = exp.accept(interpreter)
+            let errorMessage = ''; 
 
+            try {
+                exp.filter(e => e != null).forEach(e => e.accept(interpreter));
+            } catch (error) {
+                errorMessage = `Error capturado: ${error.message}`;
+                document.getElementById('errorDisplay').value = errorMessage;
+            }
+            
 
-            const simulatedResponse = `${JSON.stringify(exp, null, 2)} \n ${result.value}`;
-
-            const infoArea = document.getElementById('info-area');
+            const simulatedResponse = `${errorMessage}\n${interpreter.Console}`;
+            
             if (infoArea) {
                 infoArea.value = simulatedResponse;
             }
