@@ -56,7 +56,7 @@ Block
 
 
 Expression
-    = Assignment
+    = a:Assignment ";" { return a }
 
 
 Assignment
