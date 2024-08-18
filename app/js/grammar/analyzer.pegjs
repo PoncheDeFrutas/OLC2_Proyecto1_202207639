@@ -42,7 +42,7 @@ VarDeclaration
 Sentence
     = p:Print _ { return p }
     / b:Block _ { return b }
-    / e:Expression _ { return createNode('ExpressionStatement', { exp: e }) }
+    / e:Expression _ ";" _ { return createNode('ExpressionStatement', { exp: e }) }
 
 Print
     = "System.out.println" _ "(" _ exp:Expression _ ")" _ ";" { return createNode('Print', { exp }) }
@@ -56,7 +56,7 @@ Block
 
 
 Expression
-    = a:Assignment ";" { return a }
+    = Assignment
 
 
 Assignment

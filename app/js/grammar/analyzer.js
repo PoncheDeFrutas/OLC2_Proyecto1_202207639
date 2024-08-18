@@ -685,7 +685,7 @@ function peg$parse(input, options) {
   }
 
   function peg$parseSentence() {
-    var s0, s1, s2;
+    var s0, s1, s2, s3, s4;
 
     s0 = peg$currPos;
     s1 = peg$parsePrint();
@@ -713,8 +713,21 @@ function peg$parse(input, options) {
         s1 = peg$parseAssignment();
         if (s1 !== peg$FAILED) {
           s2 = peg$parse_();
-          peg$savedPos = s0;
-          s0 = peg$f8(s1);
+          if (input.charCodeAt(peg$currPos) === 59) {
+            s3 = peg$c2;
+            peg$currPos++;
+          } else {
+            s3 = peg$FAILED;
+            if (peg$silentFails === 0) { peg$fail(peg$e2); }
+          }
+          if (s3 !== peg$FAILED) {
+            s4 = peg$parse_();
+            peg$savedPos = s0;
+            s0 = peg$f8(s1);
+          } else {
+            peg$currPos = s0;
+            s0 = peg$FAILED;
+          }
         } else {
           peg$currPos = s0;
           s0 = peg$FAILED;
