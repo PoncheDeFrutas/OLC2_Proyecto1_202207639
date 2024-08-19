@@ -30,21 +30,26 @@ function executeAction() {
             
             const exp = parse(content);
             const interpreter = new InterpreterVisitor()
-            let errorMessage = ''; 
+            let errorMessages = [];
 
-            try {
-                exp.filter(e => e != null).forEach(e => e.accept(interpreter));
-            } catch (error) {
-                errorMessage = `Error capturado: ${error.message}`;
-                document.getElementById('errorDisplay').value = errorMessage;
+            for (let i = 0; i < exp.length; i++) {
+                try {
+                    if (exp[i] != null) {
+                        exp[i].accept(interpreter);
+                    }
+                } catch (error) {
+                    let errorMessage = `Error capturado en el elemento ${i}: ${error.message}`;
+                    errorMessages.push(errorMessage);
+                }
             }
             
+            let message = "Ejecución terminada.";
 
-            const simulatedResponse = `${errorMessage}\n${interpreter.Console}`;
-            
-            if (infoArea) {
-                infoArea.value = simulatedResponse;
+            if (errorMessages.length > 0) {
+                message = errorMessages.join('\n'); 
             }
+
+            document.getElementById('info-area').value = message+ "\n" +interpreter.Console;
         }
     } else {
         alert('No hay ninguna pestaña activa.');

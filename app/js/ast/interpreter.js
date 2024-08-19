@@ -1,5 +1,5 @@
 import {BaseVisitor} from "./visitor.js";
-import {Literal} from "./nodes.js";
+import {Assignment, Break, Case, Literal, VariableDeclaration} from "./nodes.js";
 import {ArithmeticOperation} from "../expressions/Arithmetic.js";
 import {RelationalOperation} from "../expressions/Relational.js";
 import {LogicalOperation} from "../expressions/Logical.js";
@@ -183,5 +183,137 @@ export class InterpreterVisitor extends BaseVisitor {
         node.statements.forEach(statement => {statement.accept(this)})
 
         this.Environment = lastEnvironment
+    }
+    
+    /**
+     * @type [BaseVisitor['visitIf']]
+     */
+    visitIf(node) {
+        const cond = node.cond.accept(this);
+        
+        if (!(cond instanceof Literal && cond.type === 'bool')) {
+            throw new Error('Condition must be a boolean literal');
+        }
+        
+        const stmt = cond.value ? node.stmtThen : node.stmtElse;
+        
+        return stmt.accept(this);
+    }
+    
+    /**
+     * @type [BaseVisitor['visitWhile']]
+     */
+    visitWhile(node) {
+        let cond = node.cond.accept(this);
+        let result = null
+        if (!(cond instanceof Literal && cond.type === 'bool')) {
+            throw new Error('Condition must be a boolean literal');
+        }
+        
+        while (cond.value) {
+            result = node.stmt.accept(this);
+            if (result) {
+                return result
+            }
+            cond = node.cond.accept(this);
+        }
+    }
+    
+    /**
+     * @type [BaseVisitor['visitFor']]
+     */
+    visitFor(node) {
+        const init = node.init
+        const update = node.update
+        
+        if (!(init instanceof VariableDeclaration) && !(init instanceof Assignment)) {
+            throw new Error('Init must be a variable declaration or an assignment');
+        }
+        
+        if (!(update instanceof Assignment)) {
+            throw new Error('Update must be an assignment');
+        }
+        
+        init.accept(this);
+
+        let result = null
+        let cond = node.cond.accept(this);
+        
+        if (!(cond instanceof Literal && cond.type === 'bool')) {
+            throw new Error('Condition must be a boolean literal');
+        }
+
+        while (cond.value) {
+            result = node.stmt.accept(this)
+            if (result) {
+                return result
+            }
+            node.update.accept(this)
+            cond = node.cond.accept(this)
+        }
+    }
+
+    /**
+     * @type [BaseVisitor['visitCase']]
+     */
+    visitCase(node) {
+        if (node.stmt && Array.isArray(node.stmt)) {
+            for (let i = 0; i < node.stmt.length; i++) {
+                let statement = node.stmt[i];
+                if (statement != null) {
+                    let result = statement.accept(this);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * @type [BaseVisitor['visitSwitch']]
+     */
+    visitSwitch(node) {
+        
+        const cond = node.cond.accept(this);
+        
+        if (!(cond instanceof Literal)) {
+            throw new Error('Condition must be a literal');
+        }
+
+        let foundMatch = false;
+
+        for (let i = 0; i < node.cases.length; i++) {
+            let c = node.cases[i];
+
+            if (!(c instanceof Case)) {
+                console.error("El elemento no es de tipo Case:", c);
+                continue;
+            }
+
+            if (!foundMatch) {
+                const value = c.cond.accept(this);
+                foundMatch = (value.value === cond.value);
+            }
+
+            if (foundMatch) {
+                let result = c.accept(this);
+                if (result instanceof Break) {
+                    break; 
+                }
+            }
+        }
+
+        if (node.def && (!foundMatch || foundMatch)) {
+            node.def.accept(this);
+        }
+
+    }
+    
+    /**
+     * @type [BaseVisitor['visitBreak']]
+     */
+    visitBreak(node) {
+        return node
     }
 }

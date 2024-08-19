@@ -8,23 +8,12 @@ import { Literal } from "../ast/nodes.js";
 
 export function VarDeclaration(type, name, value) {
     if (value === null) {
-        const defaultValues = {
-            'int': 0,
-            'float': 0.0,
-            'bool': true,
-            'string': '',
-            'char': '',
-            'struct': null
-        };
-
+        
         if (type === 'var') {
             throw new Error(`Variable declaration must have a value.`);
         }
 
-        if (defaultValues.hasOwnProperty(type)) {
-            return new Literal({ value: defaultValues[type], type });
-        }
-        throw new Error(`Invalid type '${type}'`);
+        return new Literal({ value: null, type });
     }
 
     if (type === 'float' && value.type === 'int') {
@@ -34,5 +23,6 @@ export function VarDeclaration(type, name, value) {
     if (type === 'var' || type === value.type) {
         return value;
     }
-    throw new Error(`Variable type '${type}' does not match value type '${value.type}'`);
+    
+    return new Literal({ value: null, type });
 }

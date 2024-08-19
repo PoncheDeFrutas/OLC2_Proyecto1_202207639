@@ -8,6 +8,11 @@ import { Literal } from '../ast/nodes.js';
  * @throws {Error}
  */
 export function LogicalOperation(op, left, right) {
+    
+    if (left.value === null || right.value === null) {
+        throw new Error(`Cannot perform logical operation with null values.`);
+    }
+    
     if (left.type !== 'bool' || right.type !== 'bool') {
         throw new Error(`Invalid operand types: ${left.type} and ${right.type}. Both operands must be of type 'bool'.`);
     }

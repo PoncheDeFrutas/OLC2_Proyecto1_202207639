@@ -13,7 +13,13 @@
             'ExpressionStatement': nodes.ExpressionStatement,
             'VarValue': nodes.VariableValue,
             'Ternary': nodes.TernaryOperation,
-            'Block': nodes.Block
+            'Block': nodes.Block,
+            'If': nodes.If,
+            'While': nodes.While,
+            'For': nodes.For,
+            'Case': nodes.Case,
+            'Break': nodes.Break,
+            'Switch': nodes.Switch
         }
 
         const node = new type[typeNode](props)
@@ -23,36 +29,62 @@
 }
 
 Program
-    = _ ( Comment )? s:Statement* _ { return s }
+    = _ ( Comment )? s:Statements* _ { return s }
+
+Statements
+    = Statement
+    / Comment _ { return undefined }
 
 Statement
     = vd:VarDeclaration _ ( Comment _ )? { return vd }
     / s:Sentence _ ( Comment _)? { return s }
-    / Comment _ { return undefined }
 
 
 VarDeclaration
     = type:(Types / "var") _ id:Id _ exp:("=" _ exp:Expression {return exp})? _ ";" {
     return createNode('VarDeclaration', { type, id, value: exp || null }) }
 
-
-
-
-
 Sentence
-    = p:Print _ { return p }
-    / b:Block _ { return b }
-    / e:Expression _ ";" _ { return createNode('ExpressionStatement', { exp: e }) }
+    = p:Print  { return p }
+    / b:Block  { return b }
+    / i:If  { return i }
+    / w:While  { return w }
+    / f:For  { return f }
+    / s:Switch  { return s }
+    / Break
+    / e:Expression _ ";" { return createNode('ExpressionStatement', { exp: e }) }
 
 Print
     = "System.out.println" _ "(" _ exp:Expression _ ")" _ ";" { return createNode('Print', { exp }) }
 
 Block
-    = "{" _ s:Statement* _ "}" { return createNode('Block', { statements: s }) }
+    = "{" _ s:Statements* _ "}" { return createNode('Block', { statements: s }) }
 
+If
+    = "if" _ "(" _ cond:Expression _ ")" _ stmtThen:Sentence
+    stmtElse:( _ "else" _ stmtElse:Sentence { return stmtElse } )? { return createNode('If', { cond, stmtThen, stmtElse }) }
 
+While
+    = "while" _ "(" _ cond:Expression _ ")" _ stmt:Sentence { return createNode('While', { cond, stmt }) }
 
+For
+    = "for" _ "(" _ init:Statement _ cond:Ternary _ ";" _ update:Expression _ ")" _ stmt:Sentence { return createNode('For', { init, cond, update, stmt }) }
 
+Switch
+    = "switch" _ "(" _ cond:Expression _ ")" _ "{" _ c:Case* _ def:Default? _ "}" { return createNode('Switch', { cond, cases: c, def }) }
+
+Case
+    = "case" _ e:Expression _ ":" _ s:Statements* {
+        return createNode('Case', { cond: e, stmt: s });
+    }
+
+Default
+    = "default" _ ":" _ s:Statements* {
+        return createNode('Case', { cond: null, stmt: s });
+    }
+
+Break
+    = "break" _ ";" { return createNode('Break', {}) }
 
 
 Expression

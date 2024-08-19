@@ -42,6 +42,24 @@
 
  * @typedef {import('./nodes').Block} Block
 
+
+ * @typedef {import('./nodes').If} If
+
+
+ * @typedef {import('./nodes').While} While
+
+
+ * @typedef {import('./nodes').For} For
+
+
+ * @typedef {import('./nodes').Case} Case
+
+
+ * @typedef {import('./nodes').Switch} Switch
+
+
+ * @typedef {import('./nodes').Break} Break
+
  */
 
 
@@ -175,6 +193,60 @@ export class BaseVisitor {
      */
     visitBlock(node) {
         throw new Error('Method visitBlock not implemented');
+    }
+    
+
+    /**
+     * @param {If} node
+     * @returns {any}
+     */
+    visitIf(node) {
+        throw new Error('Method visitIf not implemented');
+    }
+    
+
+    /**
+     * @param {While} node
+     * @returns {any}
+     */
+    visitWhile(node) {
+        throw new Error('Method visitWhile not implemented');
+    }
+    
+
+    /**
+     * @param {For} node
+     * @returns {any}
+     */
+    visitFor(node) {
+        throw new Error('Method visitFor not implemented');
+    }
+    
+
+    /**
+     * @param {Case} node
+     * @returns {any}
+     */
+    visitCase(node) {
+        throw new Error('Method visitCase not implemented');
+    }
+    
+
+    /**
+     * @param {Switch} node
+     * @returns {any}
+     */
+    visitSwitch(node) {
+        throw new Error('Method visitSwitch not implemented');
+    }
+    
+
+    /**
+     * @param {Break} node
+     * @returns {any}
+     */
+    visitBreak(node) {
+        throw new Error('Method visitBreak not implemented');
     }
     
 }

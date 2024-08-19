@@ -21,6 +21,9 @@ export class Environment {
             throw new Error(`Variable ${name} already exists`);
         }
         this.table[name] = value;
+        if (value.value === null) {
+            throw new Error(`Variable ${name} must have a value.`);
+        }
     }
     
     /**
@@ -31,7 +34,7 @@ export class Environment {
         if (this.table[name]) {
             if (this.table[name].type !== value.type) {
                 this.table[name].value = null
-                throw new Error(`Type mismatch: ${this.table[name].type} and ${value.type}`);
+                return null
             }
             this.table[name] = value
             return null
@@ -57,6 +60,4 @@ export class Environment {
         }
         throw new Error(`Variable ${name} not found`);
     }
-    
-    
 }

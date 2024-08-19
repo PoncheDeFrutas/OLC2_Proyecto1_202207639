@@ -478,4 +478,220 @@ export class Block extends Expression {
     }
 }
     
-export default { Expression, ArithmeticOperation, RelationalOperation, LogicalOperation, UnaryOperation, Group, Literal, VariableDeclaration, VariableValue, Print, Assignment, ExpressionStatement, TernaryOperation, Block }
+export class If extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the if statement.
+ * @param {Expression} options.stmtThen The expression of the then block.
+ * @param {Expression} options.stmtElse The expression of the else block.
+    */
+    constructor({ cond, stmtThen, stmtElse }) {
+        super();
+        
+        /**
+         * The condition of the if statement.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The expression of the then block.
+         * @type {Expression}
+        */
+        this.stmtThen = stmtThen;
+
+
+        /**
+         * The expression of the else block.
+         * @type {Expression}
+        */
+        this.stmtElse = stmtElse;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitIf(this);
+    }
+}
+    
+export class While extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the while statement.
+ * @param {Expression} options.stmt The expression of the while block.
+    */
+    constructor({ cond, stmt }) {
+        super();
+        
+        /**
+         * The condition of the while statement.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The expression of the while block.
+         * @type {Expression}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitWhile(this);
+    }
+}
+    
+export class For extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.init The initialization of the for statement.
+ * @param {Expression} options.cond The condition of the for statement.
+ * @param {Expression} options.update The update of the for statement.
+ * @param {Expression} options.stmt The expression of the for block.
+    */
+    constructor({ init, cond, update, stmt }) {
+        super();
+        
+        /**
+         * The initialization of the for statement.
+         * @type {Expression}
+        */
+        this.init = init;
+
+
+        /**
+         * The condition of the for statement.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The update of the for statement.
+         * @type {Expression}
+        */
+        this.update = update;
+
+
+        /**
+         * The expression of the for block.
+         * @type {Expression}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitFor(this);
+    }
+}
+    
+export class Case extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the case statement.
+ * @param {Expression[]} options.stmt The expression of the case block.
+    */
+    constructor({ cond, stmt }) {
+        super();
+        
+        /**
+         * The condition of the case statement.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The expression of the case block.
+         * @type {Expression[]}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitCase(this);
+    }
+}
+    
+export class Switch extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the switch statement.
+ * @param {Expression[]} options.cases The expression of the switch block.
+ * @param {Expression[]} options.def The expression of the default block.
+    */
+    constructor({ cond, cases, def }) {
+        super();
+        
+        /**
+         * The condition of the switch statement.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The expression of the switch block.
+         * @type {Expression[]}
+        */
+        this.cases = cases;
+
+
+        /**
+         * The expression of the default block.
+         * @type {Expression[]}
+        */
+        this.def = def;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitSwitch(this);
+    }
+}
+    
+export class Break extends Expression {
+
+    /**
+    * @param {Object} options
+    * 
+    */
+    constructor({  }) {
+        super();
+        
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitBreak(this);
+    }
+}
+    
+export default { Expression, ArithmeticOperation, RelationalOperation, LogicalOperation, UnaryOperation, Group, Literal, VariableDeclaration, VariableValue, Print, Assignment, ExpressionStatement, TernaryOperation, Block, If, While, For, Case, Switch, Break }
