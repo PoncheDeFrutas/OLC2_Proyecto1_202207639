@@ -1,0 +1,41 @@
+StructAccess
+    = first:Id rest:( "." field:Id { return { base: first, field}; })* {
+        return rest.reduce(
+            (acc, curr) => {
+                const { base, field } = curr
+                return createNode('StructAccess', { base: acc, field })
+            },
+            createNode('VarValue', { id: first })
+        );
+    }
+
+
+
+VecMethods
+    = IndexOf
+    / Join
+    / Length
+
+IndexOf
+    = id:Id "." "indexOf" _ "(" _ exp:Expression _ ")" {
+            return createNode('VecIndexOf', { id, exp })
+    }
+    / id:Id _ "[" _ exp:Expression _ "]" "." "indexOf" _ "(" _ exp2:Expression _ ")" {
+            return createNode('MatIndexOf', { id, exp, exp2 })
+    }
+
+Join
+    = id:Id "." "join" _ "(" _ ")" {
+            return createNode('VecJoin', { id })
+    }
+    / id:Id _ "[" _ exp:Expression _ "]" "." "join" _ "(" _ ")" {
+            return createNode('MatJoin', { id, exp })
+    }
+
+Length
+    = id:Id "." "length" {
+            return createNode('VecLength', { id })
+    }
+    / id:Id _ "[" _ exp:Expression _ "]" "." "length" {
+            return createNode('MatLength', { id, exp })
+    }

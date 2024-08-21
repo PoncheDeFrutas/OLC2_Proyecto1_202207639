@@ -41,187 +41,6 @@ export class Expression  {
     }
 }
     
-export class ArithmeticOperation extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.op The operator of the binary operation.
- * @param {Expression} options.le The left operand of the binary operation.
- * @param {Expression} options.ri The right operand of the binary operation.
-    */
-    constructor({ op, le, ri }) {
-        super();
-        
-        /**
-         * The operator of the binary operation.
-         * @type {string}
-        */
-        this.op = op;
-
-
-        /**
-         * The left operand of the binary operation.
-         * @type {Expression}
-        */
-        this.le = le;
-
-
-        /**
-         * The right operand of the binary operation.
-         * @type {Expression}
-        */
-        this.ri = ri;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitArithmeticOperation(this);
-    }
-}
-    
-export class RelationalOperation extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.op The operator of the binary operation.
- * @param {Expression} options.le The left operand of the binary operation.
- * @param {Expression} options.ri The right operand of the binary operation.
-    */
-    constructor({ op, le, ri }) {
-        super();
-        
-        /**
-         * The operator of the binary operation.
-         * @type {string}
-        */
-        this.op = op;
-
-
-        /**
-         * The left operand of the binary operation.
-         * @type {Expression}
-        */
-        this.le = le;
-
-
-        /**
-         * The right operand of the binary operation.
-         * @type {Expression}
-        */
-        this.ri = ri;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitRelationalOperation(this);
-    }
-}
-    
-export class LogicalOperation extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.op The operator of the binary operation.
- * @param {Expression} options.le The left operand of the binary operation.
- * @param {Expression} options.ri The right operand of the binary operation.
-    */
-    constructor({ op, le, ri }) {
-        super();
-        
-        /**
-         * The operator of the binary operation.
-         * @type {string}
-        */
-        this.op = op;
-
-
-        /**
-         * The left operand of the binary operation.
-         * @type {Expression}
-        */
-        this.le = le;
-
-
-        /**
-         * The right operand of the binary operation.
-         * @type {Expression}
-        */
-        this.ri = ri;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitLogicalOperation(this);
-    }
-}
-    
-export class UnaryOperation extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.op The operator of the unary operation.
- * @param {Expression} options.exp The operand of the unary operation.
-    */
-    constructor({ op, exp }) {
-        super();
-        
-        /**
-         * The operator of the unary operation.
-         * @type {string}
-        */
-        this.op = op;
-
-
-        /**
-         * The operand of the unary operation.
-         * @type {Expression}
-        */
-        this.exp = exp;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitUnaryOperation(this);
-    }
-}
-    
-export class Group extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {Expression} options.exp The expression inside the group.
-    */
-    constructor({ exp }) {
-        super();
-        
-        /**
-         * The expression inside the group.
-         * @type {Expression}
-        */
-        this.exp = exp;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitGroup(this);
-    }
-}
-    
 export class Literal extends Expression {
 
     /**
@@ -255,83 +74,17 @@ export class Literal extends Expression {
     }
 }
     
-export class VariableDeclaration extends Expression {
+export class Group extends Expression {
 
     /**
     * @param {Object} options
-    * @param {string} options.type The type of the variable declaration.
- * @param {string} options.id The identifier of the variable.
- * @param {Expression} options.value The initial value of the variable.
-    */
-    constructor({ type, id, value }) {
-        super();
-        
-        /**
-         * The type of the variable declaration.
-         * @type {string}
-        */
-        this.type = type;
-
-
-        /**
-         * The identifier of the variable.
-         * @type {string}
-        */
-        this.id = id;
-
-
-        /**
-         * The initial value of the variable.
-         * @type {Expression}
-        */
-        this.value = value;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitVariableDeclaration(this);
-    }
-}
-    
-export class VariableValue extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.id The name of the identifier.
-    */
-    constructor({ id }) {
-        super();
-        
-        /**
-         * The name of the identifier.
-         * @type {string}
-        */
-        this.id = id;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitVariableValue(this);
-    }
-}
-    
-export class Print extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {Expression} options.exp The expression to print.
+    * @param {Expression} options.exp The expression inside the group.
     */
     constructor({ exp }) {
         super();
         
         /**
-         * The expression to print.
+         * The expression inside the group.
          * @type {Expression}
         */
         this.exp = exp;
@@ -342,37 +95,333 @@ export class Print extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitPrint(this);
+        return visitor.visitGroup(this);
     }
 }
     
-export class Assignment extends Expression {
+export class VarValue extends Expression {
 
     /**
     * @param {Object} options
-    * @param {string} options.id The identifier of the assignment.
- * @param {string} options.sig The value of the assignment.
- * @param {Expression} options.assign The value of the assignment.
+    * @param {string} options.id The name of the variable.
     */
-    constructor({ id, sig, assign }) {
+    constructor({ id }) {
         super();
         
         /**
-         * The identifier of the assignment.
+         * The name of the variable.
+         * @type {string}
+        */
+        this.id = id;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitVarValue(this);
+    }
+}
+    
+export class VecValue extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the variable.
+ * @param {Expression} options.exp The index of the vector.
+    */
+    constructor({ id, exp }) {
+        super();
+        
+        /**
+         * The name of the variable.
          * @type {string}
         */
         this.id = id;
 
 
         /**
-         * The value of the assignment.
+         * The index of the vector.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitVecValue(this);
+    }
+}
+    
+export class MatValue extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the variable.
+ * @param {Expression} options.exp1 The row of the matrix.
+ * @param {Expression} options.exp2 The column of the matrix.
+    */
+    constructor({ id, exp1, exp2 }) {
+        super();
+        
+        /**
+         * The name of the variable.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The row of the matrix.
+         * @type {Expression}
+        */
+        this.exp1 = exp1;
+
+
+        /**
+         * The column of the matrix.
+         * @type {Expression}
+        */
+        this.exp2 = exp2;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitMatValue(this);
+    }
+}
+    
+export class Unary extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.op The operator of the unary expression.
+ * @param {Expression} options.exp The right expression of the unary expression.
+    */
+    constructor({ op, exp }) {
+        super();
+        
+        /**
+         * The operator of the unary expression.
+         * @type {string}
+        */
+        this.op = op;
+
+
+        /**
+         * The right expression of the unary expression.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitUnary(this);
+    }
+}
+    
+export class Arithmetic extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.op The operator of the arithmetic expression.
+ * @param {Expression} options.left The left expression of the arithmetic expression.
+ * @param {Expression} options.right The right expression of the arithmetic expression.
+    */
+    constructor({ op, left, right }) {
+        super();
+        
+        /**
+         * The operator of the arithmetic expression.
+         * @type {string}
+        */
+        this.op = op;
+
+
+        /**
+         * The left expression of the arithmetic expression.
+         * @type {Expression}
+        */
+        this.left = left;
+
+
+        /**
+         * The right expression of the arithmetic expression.
+         * @type {Expression}
+        */
+        this.right = right;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitArithmetic(this);
+    }
+}
+    
+export class Relational extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.op The operator of the relational expression.
+ * @param {Expression} options.left The left expression of the relational expression.
+ * @param {Expression} options.right The right expression of the relational expression.
+    */
+    constructor({ op, left, right }) {
+        super();
+        
+        /**
+         * The operator of the relational expression.
+         * @type {string}
+        */
+        this.op = op;
+
+
+        /**
+         * The left expression of the relational expression.
+         * @type {Expression}
+        */
+        this.left = left;
+
+
+        /**
+         * The right expression of the relational expression.
+         * @type {Expression}
+        */
+        this.right = right;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitRelational(this);
+    }
+}
+    
+export class Logical extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.op The operator of the logical expression.
+ * @param {Expression} options.left The left expression of the logical expression.
+ * @param {Expression} options.right The right expression of the logical expression.
+    */
+    constructor({ op, left, right }) {
+        super();
+        
+        /**
+         * The operator of the logical expression.
+         * @type {string}
+        */
+        this.op = op;
+
+
+        /**
+         * The left expression of the logical expression.
+         * @type {Expression}
+        */
+        this.left = left;
+
+
+        /**
+         * The right expression of the logical expression.
+         * @type {Expression}
+        */
+        this.right = right;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitLogical(this);
+    }
+}
+    
+export class Ternary extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the ternary expression.
+ * @param {Expression} options.trueExp The true expression of the ternary expression.
+ * @param {Expression} options.falseExp The false expression of the ternary expression.
+    */
+    constructor({ cond, trueExp, falseExp }) {
+        super();
+        
+        /**
+         * The condition of the ternary expression.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The true expression of the ternary expression.
+         * @type {Expression}
+        */
+        this.trueExp = trueExp;
+
+
+        /**
+         * The false expression of the ternary expression.
+         * @type {Expression}
+        */
+        this.falseExp = falseExp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitTernary(this);
+    }
+}
+    
+export class VarAssign extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the variable.
+ * @param {string} options.sig The assignation of the variable.
+ * @param {Expression} options.assign The expression to assign to the variable.
+    */
+    constructor({ id, sig, assign }) {
+        super();
+        
+        /**
+         * The name of the variable.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The assignation of the variable.
          * @type {string}
         */
         this.sig = sig;
 
 
         /**
-         * The value of the assignment.
+         * The expression to assign to the variable.
          * @type {Expression}
         */
         this.assign = assign;
@@ -383,7 +432,423 @@ export class Assignment extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitAssignment(this);
+        return visitor.visitVarAssign(this);
+    }
+}
+    
+export class VecAssign extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the variable.
+ * @param {Expression} options.exp The index of the vector.
+ * @param {string} options.sig The assignation of the vector.
+ * @param {Expression} options.assign The expression to assign to the vector.
+    */
+    constructor({ id, exp, sig, assign }) {
+        super();
+        
+        /**
+         * The name of the variable.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The index of the vector.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
+
+        /**
+         * The assignation of the vector.
+         * @type {string}
+        */
+        this.sig = sig;
+
+
+        /**
+         * The expression to assign to the vector.
+         * @type {Expression}
+        */
+        this.assign = assign;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitVecAssign(this);
+    }
+}
+    
+export class MatAssign extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the variable.
+ * @param {Expression} options.exp1 The row of the matrix.
+ * @param {Expression} options.exp2 The column of the matrix.
+ * @param {string} options.sig The assignation of the matrix.
+ * @param {Expression} options.assign The expression to assign to the matrix.
+    */
+    constructor({ id, exp1, exp2, sig, assign }) {
+        super();
+        
+        /**
+         * The name of the variable.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The row of the matrix.
+         * @type {Expression}
+        */
+        this.exp1 = exp1;
+
+
+        /**
+         * The column of the matrix.
+         * @type {Expression}
+        */
+        this.exp2 = exp2;
+
+
+        /**
+         * The assignation of the matrix.
+         * @type {string}
+        */
+        this.sig = sig;
+
+
+        /**
+         * The expression to assign to the matrix.
+         * @type {Expression}
+        */
+        this.assign = assign;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitMatAssign(this);
+    }
+}
+    
+export class Return extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.exp The expression to return.
+    */
+    constructor({ exp }) {
+        super();
+        
+        /**
+         * The expression to return.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitReturn(this);
+    }
+}
+    
+export class Continue extends Expression {
+
+    /**
+    * @param {Object} options
+    * 
+    */
+    constructor({  }) {
+        super();
+        
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitContinue(this);
+    }
+}
+    
+export class Break extends Expression {
+
+    /**
+    * @param {Object} options
+    * 
+    */
+    constructor({  }) {
+        super();
+        
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitBreak(this);
+    }
+}
+    
+export class Case extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The expression of the case.
+ * @param {Expression[]} options.stmt The instructions of the case.
+    */
+    constructor({ cond, stmt }) {
+        super();
+        
+        /**
+         * The expression of the case.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The instructions of the case.
+         * @type {Expression[]}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitCase(this);
+    }
+}
+    
+export class Switch extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The expression of the switch.
+ * @param {Case[]} options.cases The cases of the switch.
+ * @param {Case} options.def The default case of the switch.
+    */
+    constructor({ cond, cases, def }) {
+        super();
+        
+        /**
+         * The expression of the switch.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The cases of the switch.
+         * @type {Case[]}
+        */
+        this.cases = cases;
+
+
+        /**
+         * The default case of the switch.
+         * @type {Case}
+        */
+        this.def = def;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitSwitch(this);
+    }
+}
+    
+export class For extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.init The initialization of the for loop.
+ * @param {Expression} options.cond The condition of the for loop.
+ * @param {Expression} options.update The increment of the for loop.
+ * @param {Block} options.stmt The instructions of the for loop.
+    */
+    constructor({ init, cond, update, stmt }) {
+        super();
+        
+        /**
+         * The initialization of the for loop.
+         * @type {Expression}
+        */
+        this.init = init;
+
+
+        /**
+         * The condition of the for loop.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The increment of the for loop.
+         * @type {Expression}
+        */
+        this.update = update;
+
+
+        /**
+         * The instructions of the for loop.
+         * @type {Block}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitFor(this);
+    }
+}
+    
+export class While extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the while loop.
+ * @param {Block} options.stmt The instructions of the while loop.
+    */
+    constructor({ cond, stmt }) {
+        super();
+        
+        /**
+         * The condition of the while loop.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The instructions of the while loop.
+         * @type {Block}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitWhile(this);
+    }
+}
+    
+export class If extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.cond The condition of the if.
+ * @param {Expression} options.stmtThen The instructions of the if.
+ * @param {Expression} options.stmtElse The else of the if.
+    */
+    constructor({ cond, stmtThen, stmtElse }) {
+        super();
+        
+        /**
+         * The condition of the if.
+         * @type {Expression}
+        */
+        this.cond = cond;
+
+
+        /**
+         * The instructions of the if.
+         * @type {Expression}
+        */
+        this.stmtThen = stmtThen;
+
+
+        /**
+         * The else of the if.
+         * @type {Expression}
+        */
+        this.stmtElse = stmtElse;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitIf(this);
+    }
+}
+    
+export class Block extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression[]} options.stmt The instructions of the block.
+    */
+    constructor({ stmt }) {
+        super();
+        
+        /**
+         * The instructions of the block.
+         * @type {Expression[]}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitBlock(this);
+    }
+}
+    
+export class Print extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression[]} options.exp The expression to print.
+    */
+    constructor({ exp }) {
+        super();
+        
+        /**
+         * The expression to print.
+         * @type {Expression[]}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitPrint(this);
     }
 }
     
@@ -412,36 +877,28 @@ export class ExpressionStatement extends Expression {
     }
 }
     
-export class TernaryOperation extends Expression {
+export class VecSize extends Expression {
 
     /**
     * @param {Object} options
-    * @param {Expression} options.cond The condition of the ternary operation.
- * @param {Expression} options.trueExp The expression if the condition is true.
- * @param {Expression} options.falseExp The expression if the condition is false.
+    * @param {string} options.type The name of the vector.
+ * @param {Expression} options.exp The expression of the vector.
     */
-    constructor({ cond, trueExp, falseExp }) {
+    constructor({ type, exp }) {
         super();
         
         /**
-         * The condition of the ternary operation.
-         * @type {Expression}
+         * The name of the vector.
+         * @type {string}
         */
-        this.cond = cond;
+        this.type = type;
 
 
         /**
-         * The expression if the condition is true.
+         * The expression of the vector.
          * @type {Expression}
         */
-        this.trueExp = trueExp;
-
-
-        /**
-         * The expression if the condition is false.
-         * @type {Expression}
-        */
-        this.falseExp = falseExp;
+        this.exp = exp;
 
     }
 
@@ -449,24 +906,24 @@ export class TernaryOperation extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitTernaryOperation(this);
+        return visitor.visitVecSize(this);
     }
 }
     
-export class Block extends Expression {
+export class InitialVecValue extends Expression {
 
     /**
     * @param {Object} options
-    * @param {Expression[]} options.statements The expression of the block.
+    * @param {Expression[]} options.exp The expression of the vector.
     */
-    constructor({ statements }) {
+    constructor({ exp }) {
         super();
         
         /**
-         * The expression of the block.
+         * The expression of the vector.
          * @type {Expression[]}
         */
-        this.statements = statements;
+        this.exp = exp;
 
     }
 
@@ -474,40 +931,40 @@ export class Block extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitBlock(this);
+        return visitor.visitInitialVecValue(this);
     }
 }
     
-export class If extends Expression {
+export class VecDeclaration extends Expression {
 
     /**
     * @param {Object} options
-    * @param {Expression} options.cond The condition of the if statement.
- * @param {Expression} options.stmtThen The expression of the then block.
- * @param {Expression} options.stmtElse The expression of the else block.
+    * @param {string} options.type The type of the vector.
+ * @param {string} options.id The name of the vector.
+ * @param {Expression|null} options.exp The expression of the vector.
     */
-    constructor({ cond, stmtThen, stmtElse }) {
+    constructor({ type, id, exp }) {
         super();
         
         /**
-         * The condition of the if statement.
-         * @type {Expression}
+         * The type of the vector.
+         * @type {string}
         */
-        this.cond = cond;
+        this.type = type;
 
 
         /**
-         * The expression of the then block.
-         * @type {Expression}
+         * The name of the vector.
+         * @type {string}
         */
-        this.stmtThen = stmtThen;
+        this.id = id;
 
 
         /**
-         * The expression of the else block.
-         * @type {Expression}
+         * The expression of the vector.
+         * @type {Expression|null}
         */
-        this.stmtElse = stmtElse;
+        this.exp = exp;
 
     }
 
@@ -515,32 +972,40 @@ export class If extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitIf(this);
+        return visitor.visitVecDeclaration(this);
     }
 }
     
-export class While extends Expression {
+export class MatSize extends Expression {
 
     /**
     * @param {Object} options
-    * @param {Expression} options.cond The condition of the while statement.
- * @param {Expression} options.stmt The expression of the while block.
+    * @param {string} options.type The name of the matrix.
+ * @param {Expression} options.exp1 The row of the matrix.
+ * @param {Expression} options.exp2 The column of the matrix.
     */
-    constructor({ cond, stmt }) {
+    constructor({ type, exp1, exp2 }) {
         super();
         
         /**
-         * The condition of the while statement.
-         * @type {Expression}
+         * The name of the matrix.
+         * @type {string}
         */
-        this.cond = cond;
+        this.type = type;
 
 
         /**
-         * The expression of the while block.
+         * The row of the matrix.
          * @type {Expression}
         */
-        this.stmt = stmt;
+        this.exp1 = exp1;
+
+
+        /**
+         * The column of the matrix.
+         * @type {Expression}
+        */
+        this.exp2 = exp2;
 
     }
 
@@ -548,81 +1013,24 @@ export class While extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitWhile(this);
+        return visitor.visitMatSize(this);
     }
 }
     
-export class For extends Expression {
+export class InitialMatValue extends Expression {
 
     /**
     * @param {Object} options
-    * @param {Expression} options.init The initialization of the for statement.
- * @param {Expression} options.cond The condition of the for statement.
- * @param {Expression} options.update The update of the for statement.
- * @param {Expression} options.stmt The expression of the for block.
+    * @param {Expression[]} options.exp The expression of the matrix.
     */
-    constructor({ init, cond, update, stmt }) {
+    constructor({ exp }) {
         super();
         
         /**
-         * The initialization of the for statement.
-         * @type {Expression}
-        */
-        this.init = init;
-
-
-        /**
-         * The condition of the for statement.
-         * @type {Expression}
-        */
-        this.cond = cond;
-
-
-        /**
-         * The update of the for statement.
-         * @type {Expression}
-        */
-        this.update = update;
-
-
-        /**
-         * The expression of the for block.
-         * @type {Expression}
-        */
-        this.stmt = stmt;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitFor(this);
-    }
-}
-    
-export class Case extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {Expression} options.cond The condition of the case statement.
- * @param {Expression[]} options.stmt The expression of the case block.
-    */
-    constructor({ cond, stmt }) {
-        super();
-        
-        /**
-         * The condition of the case statement.
-         * @type {Expression}
-        */
-        this.cond = cond;
-
-
-        /**
-         * The expression of the case block.
+         * The expression of the matrix.
          * @type {Expression[]}
         */
-        this.stmt = stmt;
+        this.exp = exp;
 
     }
 
@@ -630,40 +1038,196 @@ export class Case extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitCase(this);
+        return visitor.visitInitialMatValue(this);
     }
 }
     
-export class Switch extends Expression {
+export class MatDeclaration extends Expression {
 
     /**
     * @param {Object} options
-    * @param {Expression} options.cond The condition of the switch statement.
- * @param {Expression[]} options.cases The expression of the switch block.
- * @param {Expression[]} options.def The expression of the default block.
+    * @param {string} options.type The type of the matrix.
+ * @param {string} options.id The name of the matrix.
+ * @param {Expression|null} options.exp The row of the matrix.
     */
-    constructor({ cond, cases, def }) {
+    constructor({ type, id, exp }) {
         super();
         
         /**
-         * The condition of the switch statement.
+         * The type of the matrix.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The name of the matrix.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The row of the matrix.
+         * @type {Expression|null}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitMatDeclaration(this);
+    }
+}
+    
+export class Field extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.type The name of the field.
+ * @param {string} options.id The expression of the field.
+    */
+    constructor({ type, id }) {
+        super();
+        
+        /**
+         * The name of the field.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The expression of the field.
+         * @type {string}
+        */
+        this.id = id;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitField(this);
+    }
+}
+    
+export class StructDeclaration extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the struct.
+ * @param {Field[]} options.fields The fields of the struct.
+    */
+    constructor({ id, fields }) {
+        super();
+        
+        /**
+         * The name of the struct.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The fields of the struct.
+         * @type {Field[]}
+        */
+        this.fields = fields;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitStructDeclaration(this);
+    }
+}
+    
+export class VarDeclaration extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.type The type of the variable.
+ * @param {string} options.id The name of the variable.
+ * @param {Expression|null} options.value The expression of the variable.
+    */
+    constructor({ type, id, value }) {
+        super();
+        
+        /**
+         * The type of the variable.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The name of the variable.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The expression of the variable.
+         * @type {Expression|null}
+        */
+        this.value = value;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitVarDeclaration(this);
+    }
+}
+    
+export class Function extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.type The return type of the function.
+ * @param {string} options.id The name of the function.
+ * @param {Expression[]} options.params The parameters of the function.
+ * @param {Expression} options.block The instructions of the function.
+    */
+    constructor({ type, id, params, block }) {
+        super();
+        
+        /**
+         * The return type of the function.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The name of the function.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The parameters of the function.
+         * @type {Expression[]}
+        */
+        this.params = params;
+
+
+        /**
+         * The instructions of the function.
          * @type {Expression}
         */
-        this.cond = cond;
-
-
-        /**
-         * The expression of the switch block.
-         * @type {Expression[]}
-        */
-        this.cases = cases;
-
-
-        /**
-         * The expression of the default block.
-         * @type {Expression[]}
-        */
-        this.def = def;
+        this.block = block;
 
     }
 
@@ -671,27 +1235,280 @@ export class Switch extends Expression {
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitSwitch(this);
+        return visitor.visitFunction(this);
     }
 }
     
-export class Break extends Expression {
+export class VecIndexOf extends Expression {
 
     /**
     * @param {Object} options
-    * 
+    * @param {string} options.id The name of the vector.
+ * @param {Expression} options.exp The index of the vector.
     */
-    constructor({  }) {
+    constructor({ id, exp }) {
         super();
         
+        /**
+         * The name of the vector.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The index of the vector.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
     }
 
     /**
      * @param {BaseVisitor} visitor
      */
     accept(visitor) {
-        return visitor.visitBreak(this);
+        return visitor.visitVecIndexOf(this);
     }
 }
     
-export default { Expression, ArithmeticOperation, RelationalOperation, LogicalOperation, UnaryOperation, Group, Literal, VariableDeclaration, VariableValue, Print, Assignment, ExpressionStatement, TernaryOperation, Block, If, While, For, Case, Switch, Break }
+export class MatIndexOf extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the matrix.
+ * @param {Expression} options.exp1 The row of the matrix.
+ * @param {Expression} options.exp2 The column of the matrix.
+    */
+    constructor({ id, exp1, exp2 }) {
+        super();
+        
+        /**
+         * The name of the matrix.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The row of the matrix.
+         * @type {Expression}
+        */
+        this.exp1 = exp1;
+
+
+        /**
+         * The column of the matrix.
+         * @type {Expression}
+        */
+        this.exp2 = exp2;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitMatIndexOf(this);
+    }
+}
+    
+export class VecJoin extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the vector.
+    */
+    constructor({ id }) {
+        super();
+        
+        /**
+         * The name of the vector.
+         * @type {string}
+        */
+        this.id = id;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitVecJoin(this);
+    }
+}
+    
+export class MatJoin extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the matrix.
+ * @param {Expression} options.exp The row of the matrix.
+    */
+    constructor({ id, exp }) {
+        super();
+        
+        /**
+         * The name of the matrix.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The row of the matrix.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitMatJoin(this);
+    }
+}
+    
+export class VecLength extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the vector.
+    */
+    constructor({ id }) {
+        super();
+        
+        /**
+         * The name of the vector.
+         * @type {string}
+        */
+        this.id = id;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitVecLength(this);
+    }
+}
+    
+export class MatLength extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the matrix.
+ * @param {Expression} options.exp The row of the matrix.
+    */
+    constructor({ id, exp }) {
+        super();
+        
+        /**
+         * The name of the matrix.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The row of the matrix.
+         * @type {Expression}
+        */
+        this.exp = exp;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitMatLength(this);
+    }
+}
+    
+export class StructAccess extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.base The name of the struct.
+ * @param {string} options.field The field of the struct.
+    */
+    constructor({ base, field }) {
+        super();
+        
+        /**
+         * The name of the struct.
+         * @type {string}
+        */
+        this.base = base;
+
+
+        /**
+         * The field of the struct.
+         * @type {string}
+        */
+        this.field = field;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitStructAccess(this);
+    }
+}
+    
+export class StructAssign extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the struct.
+ * @param {string[]} options.id2 The field of the struct.
+ * @param {string} options.sig The assignation of the struct.
+ * @param {Expression} options.assign The expression to assign to the struct.
+    */
+    constructor({ id, id2, sig, assign }) {
+        super();
+        
+        /**
+         * The name of the struct.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The field of the struct.
+         * @type {string[]}
+        */
+        this.id2 = id2;
+
+
+        /**
+         * The assignation of the struct.
+         * @type {string}
+        */
+        this.sig = sig;
+
+
+        /**
+         * The expression to assign to the struct.
+         * @type {Expression}
+        */
+        this.assign = assign;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitStructAssign(this);
+    }
+}
+    
+export default { Expression, Literal, Group, VarValue, VecValue, MatValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, VecAssign, MatAssign, Return, Continue, Break, Case, Switch, For, While, If, Block, Print, ExpressionStatement, VecSize, InitialVecValue, VecDeclaration, MatSize, InitialMatValue, MatDeclaration, Field, StructDeclaration, VarDeclaration, Function, VecIndexOf, MatIndexOf, VecJoin, MatJoin, VecLength, MatLength, StructAccess, StructAssign }

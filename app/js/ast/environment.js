@@ -1,5 +1,3 @@
-import { Literal } from "./nodes.js";
-
 
 export class Environment {
 
@@ -14,34 +12,27 @@ export class Environment {
 
     /**
      * @param {string} name
-     * @param {Literal} value
+     * @param {any} value
+     * @returns {any}
      */
     setVariable(name, value) {
         if (this.table[name]) {
-            throw new Error(`Variable ${name} already exists`);
+            throw new Error(`Variable ${name} already exists in this scope`);
         }
         this.table[name] = value;
-        if (value.value === null) {
-            throw new Error(`Variable ${name} must have a value.`);
-        }
     }
-    
+
     /**
      * @param {string} name
-     * @param {Literal} value
+     * @returns {any}
      */
-    setVariableValue(name, value) {
-        if (this.table[name]) {
-            if (this.table[name].type !== value.type) {
-                this.table[name].value = null
-                return null
-            }
-            this.table[name] = value
-            return null
-        }
-        
+    getVariable(name) {
+        const value = this.table[name];
+
+        if (value) return value;
+
         if (this.prev) {
-            return this.prev.setVariableValue(name, value);
+            return this.prev.getVariable(name);
         }
 
         throw new Error(`Variable ${name} not found`);
@@ -49,15 +40,25 @@ export class Environment {
 
     /**
      * @param {string} name
-     * @returns {Literal}
+     * @param {any} value
      */
-    getVariable(name) {
-        if (this.table[name]) {
-            return this.table[name];
+    assignVariable(name, value) {
+        const variable = this.table[name];
+
+        if (variable) {
+            if (this.table[name].type !== value.type) {
+                this.table[name].value = null;
+                return;
+            }
+            this.table[name] = value;
+            return;
         }
+
         if (this.prev) {
-            return this.prev.getVariable(name);
+            this.prev.assignVariable(name, value);
+            return;
         }
+
         throw new Error(`Variable ${name} not found`);
     }
 }

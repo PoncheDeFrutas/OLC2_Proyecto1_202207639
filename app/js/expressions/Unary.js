@@ -7,11 +7,11 @@ import {Literal} from "../ast/nodes.js";
  * @throws {Error}
  */
 export function UnaryOperation(op, ext) {
-    
+
     if (ext.value === null) {
         throw new Error(`Cannot perform unary operation with null value.`);
     }
-    
+
     const unaryOperations = {
         '-': value => {
             if (ext.type !== 'int' && ext.type !== 'float') {
