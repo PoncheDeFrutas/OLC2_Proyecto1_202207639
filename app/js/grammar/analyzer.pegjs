@@ -34,6 +34,12 @@
             'InitialVecValue': nodes.InitialVecValue,
             'VecSize': nodes.VecSize,
             'VecValue': nodes.VecValue,
+            'VecIndexOf': nodes.VecIndexOf,
+            'MatIndexOf': nodes.MatIndexOf,
+            'VecJoin': nodes.VecJoin,
+            'MatJoin': nodes.MatJoin,
+            'VecLength': nodes.VecLength,
+            'MatLength': nodes.MatLength,
             'Function': nodes.Function,
             'StructAccess': nodes.StructAccess,
             'StructAssign': nodes.StructAssign,
@@ -360,7 +366,38 @@ DataType
     / Char
     / Null
     / Group
+    / VecMethods
     / IdValue
+
+VecMethods
+    = IndexOf
+    / Join
+    / Length
+
+IndexOf
+    = id:Id "." "indexOf" _ "(" _ exp:Expression _ ")" {
+            return createNode('VecIndexOf', { id, exp })
+    }
+    / id:Id _ "[" _ exp:Expression _ "]" "." "indexOf" _ "(" _ exp2:Expression _ ")" {
+            return createNode('MatIndexOf', { id, exp, exp2 })
+    }
+
+Join
+    = id:Id "." "join" _ "(" _ ")" {
+            return createNode('VecJoin', { id })
+    }
+    / id:Id _ "[" _ exp:Expression _ "]" "." "join" _ "(" _ ")" {
+            return createNode('MatJoin', { id, exp })
+    }
+
+Length
+    = id:Id "." "length" {
+            return createNode('VecLength', { id })
+    }
+    / id:Id _ "[" _ exp:Expression _ "]" "." "length" {
+            return createNode('MatLength', { id, exp })
+    }
+
 
 IdValue
     = id:Id _ "[" _ exp1:Expression _ "]" _ "[" _ exp2:Expression _ "]" {

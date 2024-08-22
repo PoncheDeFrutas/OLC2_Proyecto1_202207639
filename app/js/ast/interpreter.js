@@ -556,4 +556,123 @@ export class InterpreterVisitor extends BaseVisitor {
 
         return vec.value[index.value];
     }
+
+    /**
+     * @type [BaseVisitor['visitVecAssign']]
+     */
+    visitVecAssign(node) {
+        if (!node) return null;
+
+        const vec = this.Environment.getVariable(node.id);
+
+        if (!vec || !Array.isArray(vec.value)) {
+            throw new Error('Expected vector in vector assignment');
+        }
+
+        const index = node.exp.accept(this);
+
+        if (!(index instanceof Literal) || index.type !== 'int') {
+            throw new Error('Expected integer in vector assignment');
+        }
+
+        if (index.value < 0 || index.value >= vec.value.length) {
+            throw new Error('Index out of bounds in vector assignment');
+        }
+
+        const value = node.assign.accept(this);
+
+        if (!(value instanceof Literal)) {
+            throw new Error('Expected literal in vector assignment');
+        }
+
+        if (value.type !== vec.value[index.value].type) {
+            throw new Error('Type mismatch in vector assignment');
+        }
+
+        const operations = {
+            '=': () => value,
+            '+=': () => ArithmeticOperation('+', vec.value[index.value], value),
+            '-=': () => ArithmeticOperation('-', vec.value[index.value], value)
+        };
+
+        if (!(node.sig in operations)) {
+            throw new Error(`Unsupported operation: ${node.sig}`);
+        }
+
+        const finalValue = operations[node.sig]();
+
+        vec.value[index.value] = finalValue;
+
+        this.Environment.assignVariable(node.id, vec);
+
+        return value;
+    }
+    
+    /**
+     * @type [BaseVisitor['visitVecIndexOf']]
+     */
+    visitVecIndexOf(node) {
+        if (!node) return null;
+        
+        const vec = this.Environment.getVariable(node.id);
+        
+        if (!vec || !Array.isArray(vec.value)) {
+            throw new Error('Expected vector in vector index of');
+        }
+        
+        const value = node.exp.accept(this);
+        
+        if (!(value instanceof Literal)) {
+            throw new Error('Expected literal in vector index of');
+        }
+        
+        let index = -1;
+        
+        for (let i = 0; i < vec.value.length; i++) {
+            if (vec.value[i].value === value.value) {
+                index = i;
+                break;
+            }
+        }
+
+        return new Literal({value: index, type: 'int'});
+    }
+    
+    /**
+     * @type [BaseVisitor['visitVecJoin']]
+     */
+    visitVecJoin(node) {
+        if (!node) return null;
+        
+        const vec = this.Environment.getVariable(node.id);
+        
+        if (!vec || !Array.isArray(vec.value)) {
+            throw new Error('Expected vector in vector join');
+        }
+        
+        let vecText = '';
+        
+        for (const exp of vec.value) {
+            vecText += exp.accept(this).value + ', ';
+        }
+        
+        vecText = vecText.slice(0, -2) + '';
+
+        return new Literal({value: vecText, type: 'string'});
+    }
+    
+    /**
+     * @type [BaseVisitor['visitVecLength']]
+     */
+    visitVecLength(node) {
+        if (!node) return null;
+        
+        const vec = this.Environment.getVariable(node.id);
+        
+        if (!vec || !Array.isArray(vec.value)) {
+            throw new Error('Expected vector in vector length');
+        }
+
+        return new Literal({value: vec.value.length, type: 'int'});
+    }
 }
