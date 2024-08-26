@@ -138,14 +138,13 @@ ExpressionMatrix
 
 /* ------------------------------------------------------Vector----------------------------------------------------- */
 VecDeclaration
-    =  type:(Types/Id) _ "[" _ "]" _ id:Id _ "=" _ vi:VecInitialization _ ";" {
+    =  type:(Types/Id) _ "[" _ "]" _ id:Id _ "=" _ vi:Expression _ ";" {
         return createNode('VecDeclaration', { type, id, exp: vi })
     }
 
 VecInitialization
     = InitialVecValue
     / VecSize
-    / IdValue
 
 InitialVecValue
     = "{" _ expL:ExpressionList _ "}" {
@@ -366,6 +365,7 @@ DataType
     / Char
     / Null
     / Group
+    / VecInitialization
     / VecMethods
     / IdValue
 

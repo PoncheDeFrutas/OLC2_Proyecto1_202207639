@@ -599,9 +599,7 @@ export class InterpreterVisitor extends BaseVisitor {
             throw new Error(`Unsupported operation: ${node.sig}`);
         }
 
-        const finalValue = operations[node.sig]();
-
-        vec.value[index.value] = finalValue;
+        vec.value[index.value] = operations[node.sig]();
 
         this.Environment.assignVariable(node.id, vec);
 

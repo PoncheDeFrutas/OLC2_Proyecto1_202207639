@@ -1773,7 +1773,7 @@ function peg$parse(input, options) {
             }
             if (s9 !== peg$FAILED) {
               s10 = peg$parse_();
-              s11 = peg$parseVecInitialization();
+              s11 = peg$parseAssignment();
               if (s11 !== peg$FAILED) {
                 s12 = peg$parse_();
                 if (input.charCodeAt(peg$currPos) === 59) {
@@ -1824,9 +1824,6 @@ function peg$parse(input, options) {
     s0 = peg$parseInitialVecValue();
     if (s0 === peg$FAILED) {
       s0 = peg$parseVecSize();
-      if (s0 === peg$FAILED) {
-        s0 = peg$parseIdValue();
-      }
     }
 
     return s0;
@@ -3644,9 +3641,12 @@ function peg$parse(input, options) {
             if (s0 === peg$FAILED) {
               s0 = peg$parseGroup();
               if (s0 === peg$FAILED) {
-                s0 = peg$parseVecMethods();
+                s0 = peg$parseVecInitialization();
                 if (s0 === peg$FAILED) {
-                  s0 = peg$parseIdValue();
+                  s0 = peg$parseVecMethods();
+                  if (s0 === peg$FAILED) {
+                    s0 = peg$parseIdValue();
+                  }
                 }
               }
             }
