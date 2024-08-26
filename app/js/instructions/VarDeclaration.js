@@ -6,9 +6,9 @@ import { Literal } from "../ast/nodes.js";
  * @param {Literal|null} value
  */
 
-export function VarDeclaration(type, name, value) {
+export function VarDeclarationF(type, name, value) {
     if (value === null) {
-        
+
         if (type === 'var') {
             throw new Error(`Variable declaration must have a value.`);
         }
@@ -23,6 +23,6 @@ export function VarDeclaration(type, name, value) {
     if (type === 'var' || type === value.type) {
         return value;
     }
-    
+
     return new Literal({ value: null, type });
 }

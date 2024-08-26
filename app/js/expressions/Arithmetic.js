@@ -1,4 +1,4 @@
-import { Literal } from "../ast/nodes.js";
+import {Literal} from "../ast/nodes.js";
 
 /**
  * @param {string} op
@@ -12,7 +12,7 @@ export function ArithmeticOperation(op, left, right) {
     if (left.value === null || right.value === null) {
         throw new Error(`Cannot perform arithmetic operation with null values.`);
     }
-    
+
     const rules = OperationRules[op];
 
     const accepted = rules.find(([tl, tr]) => tl === left.type && tr === right.type);
@@ -25,7 +25,7 @@ export function ArithmeticOperation(op, left, right) {
 
     if ((op === '/' || op === '%') && right.value === 0) {
         console.warn("Division by zero detected. Result is null.");
-        return new Literal({ value: null, type: 'null' });
+        return new Literal({ value: null, type: 'int' });
     }
 
     const operations = {
