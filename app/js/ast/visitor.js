@@ -13,12 +13,6 @@
  * @typedef {import('./nodes').VarValue} VarValue
 
 
- * @typedef {import('./nodes').VecValue} VecValue
-
-
- * @typedef {import('./nodes').MatValue} MatValue
-
-
  * @typedef {import('./nodes').Unary} Unary
 
 
@@ -35,12 +29,6 @@
 
 
  * @typedef {import('./nodes').VarAssign} VarAssign
-
-
- * @typedef {import('./nodes').VecAssign} VecAssign
-
-
- * @typedef {import('./nodes').MatAssign} MatAssign
 
 
  * @typedef {import('./nodes').Return} Return
@@ -76,58 +64,10 @@
  * @typedef {import('./nodes').ExpressionStatement} ExpressionStatement
 
 
- * @typedef {import('./nodes').VecSize} VecSize
-
-
- * @typedef {import('./nodes').InitialVecValue} InitialVecValue
-
-
- * @typedef {import('./nodes').VecDeclaration} VecDeclaration
-
-
- * @typedef {import('./nodes').MatSize} MatSize
-
-
- * @typedef {import('./nodes').InitialMatValue} InitialMatValue
-
-
- * @typedef {import('./nodes').MatDeclaration} MatDeclaration
-
-
- * @typedef {import('./nodes').Field} Field
-
-
- * @typedef {import('./nodes').StructDeclaration} StructDeclaration
-
-
  * @typedef {import('./nodes').VarDeclaration} VarDeclaration
 
 
- * @typedef {import('./nodes').Function} Function
-
-
- * @typedef {import('./nodes').VecIndexOf} VecIndexOf
-
-
- * @typedef {import('./nodes').MatIndexOf} MatIndexOf
-
-
- * @typedef {import('./nodes').VecJoin} VecJoin
-
-
- * @typedef {import('./nodes').MatJoin} MatJoin
-
-
- * @typedef {import('./nodes').VecLength} VecLength
-
-
- * @typedef {import('./nodes').MatLength} MatLength
-
-
- * @typedef {import('./nodes').StructAccess} StructAccess
-
-
- * @typedef {import('./nodes').StructAssign} StructAssign
+ * @typedef {import('./nodes').Callee} Callee
 
  */
 
@@ -172,24 +112,6 @@ export class BaseVisitor {
      */
     visitVarValue(node) {
         throw new Error('Method visitVarValue not implemented');
-    }
-    
-
-    /**
-     * @param {VecValue} node
-     * @returns {any}
-     */
-    visitVecValue(node) {
-        throw new Error('Method visitVecValue not implemented');
-    }
-    
-
-    /**
-     * @param {MatValue} node
-     * @returns {any}
-     */
-    visitMatValue(node) {
-        throw new Error('Method visitMatValue not implemented');
     }
     
 
@@ -244,24 +166,6 @@ export class BaseVisitor {
      */
     visitVarAssign(node) {
         throw new Error('Method visitVarAssign not implemented');
-    }
-    
-
-    /**
-     * @param {VecAssign} node
-     * @returns {any}
-     */
-    visitVecAssign(node) {
-        throw new Error('Method visitVecAssign not implemented');
-    }
-    
-
-    /**
-     * @param {MatAssign} node
-     * @returns {any}
-     */
-    visitMatAssign(node) {
-        throw new Error('Method visitMatAssign not implemented');
     }
     
 
@@ -365,78 +269,6 @@ export class BaseVisitor {
     
 
     /**
-     * @param {VecSize} node
-     * @returns {any}
-     */
-    visitVecSize(node) {
-        throw new Error('Method visitVecSize not implemented');
-    }
-    
-
-    /**
-     * @param {InitialVecValue} node
-     * @returns {any}
-     */
-    visitInitialVecValue(node) {
-        throw new Error('Method visitInitialVecValue not implemented');
-    }
-    
-
-    /**
-     * @param {VecDeclaration} node
-     * @returns {any}
-     */
-    visitVecDeclaration(node) {
-        throw new Error('Method visitVecDeclaration not implemented');
-    }
-    
-
-    /**
-     * @param {MatSize} node
-     * @returns {any}
-     */
-    visitMatSize(node) {
-        throw new Error('Method visitMatSize not implemented');
-    }
-    
-
-    /**
-     * @param {InitialMatValue} node
-     * @returns {any}
-     */
-    visitInitialMatValue(node) {
-        throw new Error('Method visitInitialMatValue not implemented');
-    }
-    
-
-    /**
-     * @param {MatDeclaration} node
-     * @returns {any}
-     */
-    visitMatDeclaration(node) {
-        throw new Error('Method visitMatDeclaration not implemented');
-    }
-    
-
-    /**
-     * @param {Field} node
-     * @returns {any}
-     */
-    visitField(node) {
-        throw new Error('Method visitField not implemented');
-    }
-    
-
-    /**
-     * @param {StructDeclaration} node
-     * @returns {any}
-     */
-    visitStructDeclaration(node) {
-        throw new Error('Method visitStructDeclaration not implemented');
-    }
-    
-
-    /**
      * @param {VarDeclaration} node
      * @returns {any}
      */
@@ -446,83 +278,11 @@ export class BaseVisitor {
     
 
     /**
-     * @param {Function} node
+     * @param {Callee} node
      * @returns {any}
      */
-    visitFunction(node) {
-        throw new Error('Method visitFunction not implemented');
-    }
-    
-
-    /**
-     * @param {VecIndexOf} node
-     * @returns {any}
-     */
-    visitVecIndexOf(node) {
-        throw new Error('Method visitVecIndexOf not implemented');
-    }
-    
-
-    /**
-     * @param {MatIndexOf} node
-     * @returns {any}
-     */
-    visitMatIndexOf(node) {
-        throw new Error('Method visitMatIndexOf not implemented');
-    }
-    
-
-    /**
-     * @param {VecJoin} node
-     * @returns {any}
-     */
-    visitVecJoin(node) {
-        throw new Error('Method visitVecJoin not implemented');
-    }
-    
-
-    /**
-     * @param {MatJoin} node
-     * @returns {any}
-     */
-    visitMatJoin(node) {
-        throw new Error('Method visitMatJoin not implemented');
-    }
-    
-
-    /**
-     * @param {VecLength} node
-     * @returns {any}
-     */
-    visitVecLength(node) {
-        throw new Error('Method visitVecLength not implemented');
-    }
-    
-
-    /**
-     * @param {MatLength} node
-     * @returns {any}
-     */
-    visitMatLength(node) {
-        throw new Error('Method visitMatLength not implemented');
-    }
-    
-
-    /**
-     * @param {StructAccess} node
-     * @returns {any}
-     */
-    visitStructAccess(node) {
-        throw new Error('Method visitStructAccess not implemented');
-    }
-    
-
-    /**
-     * @param {StructAssign} node
-     * @returns {any}
-     */
-    visitStructAssign(node) {
-        throw new Error('Method visitStructAssign not implemented');
+    visitCallee(node) {
+        throw new Error('Method visitCallee not implemented');
     }
     
 }

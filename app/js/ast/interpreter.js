@@ -1,11 +1,10 @@
 import {BaseVisitor} from "./visitor.js";
 import {Environment} from "./environment.js";
-import {
-    Break,
-    Continue,
+import nodes, {
+    Expression,
     Literal,
-    Logical, Relational,
-    Return,
+    Logical,
+    Relational,
     VarAssign,
     VarDeclaration
 } from "./nodes.js";
@@ -14,15 +13,28 @@ import {RelationalOperation} from "../expressions/Relational.js";
 import {LogicalOperation} from "../expressions/Logical.js";
 import {UnaryOperation} from "../expressions/Unary.js";
 import {VarDeclarationF} from "../instructions/VarDeclaration.js";
+import {BreakException, ContinueException, ReturnException} from "../instructions/Transfers.js";
+import {Invocable} from "../expressions/Invocable.js";
+import {Natives} from "../instructions/NativeFunction.js";
 
 export class InterpreterVisitor extends BaseVisitor {
     
     constructor() {
         super();
         this.Environment = new Environment();
-        this.Environment.name = 'global';
         this.Console = '';
-        this.lastBlockType = '';
+
+        /**
+         * 
+         */
+        Object.entries(Natives).forEach(([name, func]) => {
+           this.Environment.setVariable(name, func);
+        });
+        
+        /**
+         * @type {Expression|null}
+         */
+        this.prevContinue = null;
     }
 
     /**
@@ -139,42 +151,6 @@ export class InterpreterVisitor extends BaseVisitor {
 
         this.Console += '\n';
     }
-    
-    /**
-     * @type [BaseVisitor['visitContinue']]
-     */
-    visitContinue(node) {
-        for (let env = this.Environment; env; env = env.prev) {
-            if (env.name === 'loop') {
-                return node;
-            }
-        }
-        throw new Error('Continue statement outside of loop');
-    }
-    
-    /**
-     * @type [BaseVisitor['visitBreak']]
-     */
-    visitBreak(node) {
-        for (let env = this.Environment; env; env = env.prev) {
-            if (env.name === 'loop' || env.name === 'switch') {
-                return node;
-            }
-        }
-        throw new Error('Break statement outside of loop or switch');
-    }
-    
-    /**
-     * @type [BaseVisitor['visitReturn']]
-     */
-    visitReturn(node) {
-        for (let env = this.Environment; env; env = env.prev) {
-            if (env.name === 'function') {
-                return node
-            }
-        }
-        throw new Error('Return statement outside of function');
-    }
 
     /**
      * @type [BaseVisitor['visitBlock']]
@@ -183,18 +159,12 @@ export class InterpreterVisitor extends BaseVisitor {
         if (!node) return null;
 
         this.Environment = new Environment(this.Environment);
-        this.Environment.name = this.lastBlockType;
-        this.lastBlockType = '';
-        let result = null;
 
-        for (const statement of node.stmt) {
-            if (!statement) continue;
-            result = statement.accept(this);
-            if (result) break;
-        }
+        node.stmt.forEach(statement => {
+            statement.accept(this);
+        });
 
         this.Environment = this.Environment.prev;
-        return result;
     }
     
     /**
@@ -212,25 +182,76 @@ export class InterpreterVisitor extends BaseVisitor {
         const stmt = condition.value ? node.stmtThen : node.stmtElse
         
         if (stmt) {
-            this.lastBlockType = 'if';
-            return stmt.accept(this);
+            stmt.accept(this);
         }
     }
 
+    /**
+     * @type [BaseVisitor['visitCase']]
+     */
+    visitCase(node) {
+        if (!node || !Array.isArray(node.stmt)) return null;
+
+        node.stmt.forEach(statement => {
+            if (statement) {
+                statement.accept(this);
+            }
+        });
+
+    }
+
+    /**
+     * @type [BaseVisitor['visitSwitch']]
+     */
+    visitSwitch(node) {
+        if (!node) return null;
+
+        const cond = node.cond.accept(this);
+
+        if (!(cond instanceof Literal)) {
+            throw new Error('Expected literal in switch statement');
+        }
+
+        let foundMatch = false;
+
+        this.Environment = new Environment(this.Environment);
+
+        try {
+            for (const c of node.cases) {
+                if (!foundMatch) {
+                    const value = c.cond.accept(this);
+                    foundMatch = value.value === cond.value;
+                }
+                if (foundMatch) {
+                    c.accept(this);
+                }
+            }
+            if (node.def && !foundMatch) {
+                node.def.accept(this);
+            }
+        } catch (error) {
+            if (!(error instanceof BreakException)) {
+                throw error;
+            }
+        } finally {
+            this.Environment = this.Environment.prev;
+        }
+    }
+    
     /**
      * @type [BaseVisitor['visitTernary']]
      */
     visitTernary(node) {
         if (!node) return null;
-        
+
         const cond = node.cond.accept(this);
-        
+
         if (!(cond instanceof Literal) || cond.type !== 'bool') {
             throw new Error('Expected boolean expression in ternary operator');
         }
-        
+
         const res = cond.value ? node.trueExp.accept(this) : node.falseExp.accept(this);
-        
+
         if (!(res instanceof Literal)) {
             throw new Error('Expected literal in ternary operator');
         }
@@ -253,21 +274,19 @@ export class InterpreterVisitor extends BaseVisitor {
         if (!node.stmt){
             throw new Error('Expected statement in while loop');
         }
-        
-        while (cond.value) {
-            this.lastBlockType = 'loop';
-            const result = node.stmt.accept(this);
-            if (result) {
-                if (result instanceof Break) {
-                    break;
-                } else if (result instanceof Continue) {
-                    cond = node.cond.accept(this);
-                    continue;
-                } else if (result instanceof Return) {
-                    return result;
-                }
+
+        const lastEnvironment = this.Environment
+        try {
+            while (node.cond.accept(this).value) {
+                node.stmt.accept(this)
             }
-            cond = node.cond.accept(this);
+        } catch (error) {
+            this.Environment = lastEnvironment
+
+            if (error instanceof BreakException) { return null; }
+            if (error instanceof ContinueException) { return this.visitWhile(node);}
+
+            throw error;
         }
     }
 
@@ -289,37 +308,53 @@ export class InterpreterVisitor extends BaseVisitor {
             throw new Error('Invalid update in for loop');
         }
         
-        this.Environment = new Environment(this.Environment);
-        this.Environment.name = 'loop';
+        const lastIncrement = this.prevContinue;
+        this.prevContinue = node.update;
 
-        node.init.accept(this);
+        const whileNode = new nodes.Block({
+            stmt: [
+                node.init,
+                new nodes.While({
+                    cond: node.cond,
+                    stmt: new nodes.Block({
+                        stmt: [
+                            node.stmt,
+                            node.update
+                        ]
+                    })
+                })
+            ]
+        })
 
-        let result = null;
-        let cond = node.cond.accept(this);
+        whileNode.accept(this);
 
-        if (!(cond instanceof Literal) || cond.type !== 'bool') {
-            throw new Error('Expected boolean expression in for loop');
+        this.prevContinue = lastIncrement;
+    }
+
+    /**
+     * @type [BaseVisitor['visitContinue']]
+     */
+    visitContinue(node) {
+        if (this.prevContinue) {
+            this.prevContinue.accept(this);
         }
+        throw new ContinueException();
+    }
 
-        while (cond.value) {
-            result = node.stmt.accept(this);
-            if (result) {
-                if (result instanceof Break) {
-                    break;
-                } else if (result instanceof Continue) {
-                    node.update.accept(this);
-                    cond = node.cond.accept(this);
-                    continue;
-                } else if (result instanceof Return) {
-                    break;
-                }
-            }
-            node.update.accept(this);
-            cond = node.cond.accept(this);
-        }
+    /**
+     * @type [BaseVisitor['visitBreak']]
+     */
+    visitBreak(node) {
+        throw new BreakException()
+    }
 
-        this.Environment = this.Environment.prev;
-        return result;
+    /**
+     * @type [BaseVisitor['visitReturn']]
+     */
+    visitReturn(node) {
+        let value = null
+        if (node.exp) {value = node.exp.accept(this)}
+        throw new ReturnException(value)
     }
 
     /**
@@ -380,297 +415,27 @@ export class InterpreterVisitor extends BaseVisitor {
         if (!node) return null;
         node.exp.accept(this);
     }
-    
-    /**
-     * @type [BaseVisitor['visitCase']]
-     */
-    visitCase(node) {
-        if (!node) return null;
-        
-        let result = null;
-        
-        if (node.stmt && Array.isArray(node.stmt)) {
-            for (const statement of node.stmt) {
-                if (!statement) continue;
-                result = statement.accept(this);
-                if (result) break;
-            }
-        }
-        
-        return result;
-    }
-    
-    /**
-     * @type [BaseVisitor['visitSwitch']]
-     */
-    visitSwitch(node) {
-        if (!node) return null;
-        
-        const cond = node.cond.accept(this);
-        
-        if (!(cond instanceof Literal)) {
-            throw new Error('Expected literal in switch statement');
-        }
-        
-        let foundMatch, breakFound = false;
-        let result = null;
-        
-        this.Environment = new Environment(this.Environment);
-        this.Environment.name = 'switch';
-        
-        for (const c of node.cases) {
-            if (!foundMatch) {
-                const value = c.cond.accept(this);
-                foundMatch = value.value === cond.value;
-            }
-            if (foundMatch && !breakFound) {
-                result = c.accept(this);
-                if (result instanceof Break) {
-                    result = null;
-                    breakFound = true;
-                    break;
-                }
-                if (result instanceof Continue) {
-                    breakFound = true;
-                    break;
-                }
-            }
-        }
-        
-        if (node.def && (!foundMatch || (foundMatch && !breakFound))) {
-            result = node.def.accept(this);
-        }
-
-        this.Environment = this.Environment.prev;
-        return result;
-    }
-    
-    /**
-     * @type [BaseVisitor['visitVecDeclaration']]
-     */
-    visitVecDeclaration(node) {
-        if (!node) return null;
-
-        const vec = node.exp.accept(this);
-
-        if (!(vec instanceof Literal) || !Array.isArray(vec.value)) {
-            throw new Error('Expected literal in vector declaration');
-        }
-
-        if (vec.type !== `vec<${node.type}>`) {
-            throw new Error(`Type mismatch: expected vec<${node.type}> but found ${vec.type}`);
-        }
-
-        this.Environment.setVariable(node.id, vec);
-    }
-    
-    /**
-     * @type [BaseVisitor['visitVecSize']]
-     */
-    visitVecSize(node) {
-        if (!node) return null;
-
-        const size = node.exp.accept(this);
-
-        if (!(size instanceof Literal) || size.type !== 'int') {
-            throw new Error('Expected integer in vector size declaration');
-        }
-
-        const defaultValues = {
-            int: 0,
-            float: 0.0,
-            string: "",
-            boolean: false,
-            char: "\u0000",
-            struct: null
-        };
-
-        const defaultValue = defaultValues[node.type] !== undefined ? defaultValues[node.type] : null;
-
-        const vec = Array(size.value).fill(new Literal({value: defaultValue, type: node.type}))
-
-        return new Literal({value: vec, type: `vec<${node.type}>`});
-    }
-    
-    /**
-     * @type [BaseVisitor['visitInitialVecValue']]
-     */
-    visitInitialVecValue(node) {
-        if (!node) return null;
-
-        const vec = [];
-        const expList = node.exp;
-
-        if (expList.length === 0) return vec;
-
-        let firstValue = expList[0].accept(this);
-
-        if (!(firstValue instanceof Literal)) {
-            throw new Error('Expected literal in vector declaration');
-        }
-
-        const expectedType = firstValue.type;
-        vec.push(firstValue);
-
-        for (let i = 1; i < expList.length; i++) {
-            const exp = expList[i];
-            if (!exp) continue;
-
-            const value = exp.accept(this);
-
-            if (!(value instanceof Literal)) {
-                throw new Error('Expected literal in vector declaration');
-            }
-
-            if (value.type !== expectedType) {
-                throw new Error(`Type mismatch: expected ${expectedType} but found ${value.type}`);
-            }
-
-            vec.push(value);
-        }
-
-        return new Literal({value: vec, type: `vec<${expectedType}>`});
-    }
-    
-    /**
-     * @type [BaseVisitor['visitVecValue']]
-     */
-    visitVecValue(node) {
-        if (!node) return null;
-
-        const vec = this.Environment.getVariable(node.id);
-
-        if (!vec || !Array.isArray(vec.value)) {
-            throw new Error('Expected vector in vector value');
-        }
-
-        const index = node.exp.accept(this);
-
-        if (!(index instanceof Literal) || index.type !== 'int') {
-            throw new Error('Expected integer in vector value');
-        }
-
-        if (index.value < 0 || index.value >= vec.value.length) {
-            throw new Error('Index out of bounds in vector value');
-        }
-
-        return vec.value[index.value];
-    }
 
     /**
-     * @type [BaseVisitor['visitVecAssign']]
+     * @type [BaseVisitor['visitCallee']]
      */
-    visitVecAssign(node) {
+    visitCallee(node) {
         if (!node) return null;
 
-        const vec = this.Environment.getVariable(node.id);
-
-        if (!vec || !Array.isArray(vec.value)) {
-            throw new Error('Expected vector in vector assignment');
+        const func = node.callee.accept(this);
+        
+        const args = node.args.map(arg => arg.accept(this));
+        
+        if (!(func instanceof Invocable)) {
+            throw new Error('Expected invocable in function call');
         }
-
-        const index = node.exp.accept(this);
-
-        if (!(index instanceof Literal) || index.type !== 'int') {
-            throw new Error('Expected integer in vector assignment');
+        
+        if (func.arity() !== args.length) {
+            throw new Error(`Expected ${func.arity()} arguments, got ${args.length}`);
         }
-
-        if (index.value < 0 || index.value >= vec.value.length) {
-            throw new Error('Index out of bounds in vector assignment');
-        }
-
-        const value = node.assign.accept(this);
-
-        if (!(value instanceof Literal)) {
-            throw new Error('Expected literal in vector assignment');
-        }
-
-        if (value.type !== vec.value[index.value].type) {
-            throw new Error('Type mismatch in vector assignment');
-        }
-
-        const operations = {
-            '=': () => value,
-            '+=': () => ArithmeticOperation('+', vec.value[index.value], value),
-            '-=': () => ArithmeticOperation('-', vec.value[index.value], value)
-        };
-
-        if (!(node.sig in operations)) {
-            throw new Error(`Unsupported operation: ${node.sig}`);
-        }
-
-        vec.value[index.value] = operations[node.sig]();
-
-        this.Environment.assignVariable(node.id, vec);
-
-        return value;
+        
+        return func.invocable(this, args);
     }
-    
-    /**
-     * @type [BaseVisitor['visitVecIndexOf']]
-     */
-    visitVecIndexOf(node) {
-        if (!node) return null;
-        
-        const vec = this.Environment.getVariable(node.id);
-        
-        if (!vec || !Array.isArray(vec.value)) {
-            throw new Error('Expected vector in vector index of');
-        }
-        
-        const value = node.exp.accept(this);
-        
-        if (!(value instanceof Literal)) {
-            throw new Error('Expected literal in vector index of');
-        }
-        
-        let index = -1;
-        
-        for (let i = 0; i < vec.value.length; i++) {
-            if (vec.value[i].value === value.value) {
-                index = i;
-                break;
-            }
-        }
 
-        return new Literal({value: index, type: 'int'});
-    }
-    
-    /**
-     * @type [BaseVisitor['visitVecJoin']]
-     */
-    visitVecJoin(node) {
-        if (!node) return null;
-        
-        const vec = this.Environment.getVariable(node.id);
-        
-        if (!vec || !Array.isArray(vec.value)) {
-            throw new Error('Expected vector in vector join');
-        }
-        
-        let vecText = '';
-        
-        for (const exp of vec.value) {
-            vecText += exp.accept(this).value + ', ';
-        }
-        
-        vecText = vecText.slice(0, -2) + '';
 
-        return new Literal({value: vecText, type: 'string'});
-    }
-    
-    /**
-     * @type [BaseVisitor['visitVecLength']]
-     */
-    visitVecLength(node) {
-        if (!node) return null;
-        
-        const vec = this.Environment.getVariable(node.id);
-        
-        if (!vec || !Array.isArray(vec.value)) {
-            throw new Error('Expected vector in vector length');
-        }
-
-        return new Literal({value: vec.value.length, type: 'int'});
-    }
 }
