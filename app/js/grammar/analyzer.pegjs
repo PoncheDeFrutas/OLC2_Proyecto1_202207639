@@ -22,7 +22,12 @@
             'Break': nodes.Break,
             'Continue': nodes.Continue,
             'Return': nodes.Return,
-            'Callee': nodes.Callee
+            'Callee': nodes.Callee,
+            'Function': nodes.FuncDeclaration,
+            'StructDeclaration': nodes.StructDeclaration,
+            'Instance': nodes.Instance,
+            'Get': nodes.Get,
+            'Set': nodes.Set
         }
 
         const node = new type[typeNode](props)
@@ -39,18 +44,45 @@ Statements
     / Comment _ { return undefined }
 
 Statement
-    = vd:VarDeclaration _ ( Comment _ )? { return vd }
+    = s:StructDeclaration _ ( Comment _)? { return s }
+    / f:Function _ ( Comment _)? { return f }
+    / vd:VarDeclaration _ ";" _ ( Comment _ )? { return vd }
     / s:Sentence _ ( Comment _)? { return s }
 
 
 /* ------------------------------------------------------Declaration------------------------------------------------ */
 VarDeclaration
-    = type:(Types / "var") _ id:Id _ exp:("=" _ exp:Expression {return exp})? _ ";" {
+    = type:(Types / "var" / Id) _ id:Id _ exp:("=" _ exp:Expression { return exp })? {
         return createNode('VarDeclaration', { type, id, value: exp || null })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+/* ------------------------------------------------------Function--------------------------------------------------- */
+Function
+    = type:(Types/ Id / "var") _ id:Id _ "(" _ params:Parameters? ")" _ block:Block {
+        return createNode('Function', { type, id, params: params || [], block })
+    }
+
+Parameters
+    = head:Param _ tail:( "," _ param:Param _ { return param })* {
+        return [head, ...tail]
+    }
+
+Param
+    = VarDeclaration
+/* ------------------------------------------------------------------------------------------------------------------ */
+
 /* ------------------------------------------------------Struct----------------------------------------------------- */
+
+StructDeclaration
+    = "struct" _ id:Id _ "{" _ fields:Field+ _ "}" _  ";" {
+        return createNode('StructDeclaration', { id, fields })
+    }
+
+Field
+    = vd:VarDeclaration _ ";" _ {
+        return vd
+    }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -81,7 +113,7 @@ Sentence
 
 /* ------------------------------------------------------Print------------------------------------------------------ */
 Print
-    = "System.out.println" _ "(" exp:Arguments ")" _ ";" {
+    = "System.out.println" _ "(" _ exp:Arguments ")" _ ";" {
         return createNode('Print', { exp })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -147,13 +179,17 @@ Expression
     = Assignment
 
 Arguments
-    = arg:Expression _ args:( "," _ exp:Expression { return exp } )* {
+    = arg:Expression _ args:( "," _ exp:Expression _ { return exp } )* {
         return [arg, ...args]
     }
 
 Assignment
-    = id:Id _ sig:("=" / "+=" / "-=") _ assign:Assignment {
-        return createNode('VarAssign', { id, sig, assign })
+    = id:Callee _ sig:("=" / "+=" / "-=") _ assign:Assignment {
+        if (id instanceof nodes.VarValue) {
+            return createNode('VarAssign', { id: id.id, sig, assign })
+        } else if (id instanceof nodes.Get) {
+            return createNode('Set', { object: id.object, property: id.property, value: assign, sig })
+        }
     }
     / Ternary
 
@@ -236,7 +272,7 @@ Sum
 
 Mul
     = le:Unary expansion:(
-        _ op:("*" / "/") _ ri:Unary { return { type: op, ri } }
+        _ op:("*" / "/" / "%") _ ri:Unary { return { type: op, ri } }
     )* {
         return expansion.reduce(
             (acc, curr) => {
@@ -254,14 +290,30 @@ Unary
     / Callee
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-Callee = callee:DataType _ params:("(" args:Arguments? ")" {return args})* {
-    return params.reduce(
-        (callee, args) => {
-            return createNode('Callee', { callee , args: args || [] })
-        },
-        callee
-    )
-}
+/* ------------------------------------------------------Callee------------------------------------------------------ */
+Callee = initial:DataType operations:(
+        ("(" _ args:Arguments? _ ")" { return { type: 'call', args: args || [] } })
+        / ("[" _ index:Expression _ "]" { return { type: 'index', index } })
+        / ("." _ id:Id { return { type: 'access', id } })
+    )* {
+        return operations.reduce(
+            (objective, args) => {
+                const { type, id, index, args: argsList } = args
+
+                if (type === 'call') {
+                    return createNode('Callee', { callee:objective , args: argsList || [] })
+                } else if (type === 'index') {
+                    //return createNode('Callee', { callee:objective , index })
+                } else if (type === 'access') {
+                    return createNode('Get', { object:objective , property:id })
+                }
+            },
+            initial
+        )
+    }
+
+
+/* ------------------------------------------------------------------------------------------------------------------ */
 
 /* -----------------------------------------------------DataType----------------------------------------------------- */
 DataType
@@ -271,7 +323,23 @@ DataType
     / Char
     / Null
     / Group
+    / Instance
     / IdValue
+
+Instance
+    = id:Id _ "{" _ args:Attributes "}" {
+        return createNode('Instance', { id, args: args || [] })
+    }
+
+Attributes
+    = head:Attribute _ tail:( "," _ Attr:Attribute _ { return Attr })* {
+        return [head, ...tail]
+    }
+
+Attribute
+    = id:Id _ ":" _ assign:Expression {
+        return createNode('VarAssign', { id, sig:"=", assign })
+    }
 
 IdValue
     = id:Id {
@@ -339,6 +407,22 @@ _
 Types
     = ("int" / "float" / "bool" / "string" / "char" / "void") { return text(); }
 
+Separator
+    = [ \t\n\r]+ / ";" / "(" / ")" / "{" / "}"
+    / "," / "." / "=" / "!" / "+" / "-" / "*"
+    / "/" / "<" / ">" / "<=" / ">=" / "==" / "!="
+    / "&&" / "||" / "?" / ":" / "++" / "--"
+    / "[" / "]"
+
+ReservedWord
+    = "if" / "else" / "while" / "for" / "return" / "switch"
+    / "case" / "default" / "break" / "continue" / "struct"
+    / "var" / "true" / "false" / "null"
+
 Id
+    = !(ReservedWord Separator) id:Identifier { return id; }
+
+Identifier
     = [a-zA-Z_][a-zA-Z0-9_]* { return text(); }
+
 /* ------------------------------------------------------------------------------------------------------------------ */

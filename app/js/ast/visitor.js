@@ -69,6 +69,21 @@
 
  * @typedef {import('./nodes').Callee} Callee
 
+
+ * @typedef {import('./nodes').FuncDeclaration} FuncDeclaration
+
+
+ * @typedef {import('./nodes').StructDeclaration} StructDeclaration
+
+
+ * @typedef {import('./nodes').Instance} Instance
+
+
+ * @typedef {import('./nodes').Get} Get
+
+
+ * @typedef {import('./nodes').Set} Set
+
  */
 
 
@@ -283,6 +298,51 @@ export class BaseVisitor {
      */
     visitCallee(node) {
         throw new Error('Method visitCallee not implemented');
+    }
+    
+
+    /**
+     * @param {FuncDeclaration} node
+     * @returns {any}
+     */
+    visitFuncDeclaration(node) {
+        throw new Error('Method visitFuncDeclaration not implemented');
+    }
+    
+
+    /**
+     * @param {StructDeclaration} node
+     * @returns {any}
+     */
+    visitStructDeclaration(node) {
+        throw new Error('Method visitStructDeclaration not implemented');
+    }
+    
+
+    /**
+     * @param {Instance} node
+     * @returns {any}
+     */
+    visitInstance(node) {
+        throw new Error('Method visitInstance not implemented');
+    }
+    
+
+    /**
+     * @param {Get} node
+     * @returns {any}
+     */
+    visitGet(node) {
+        throw new Error('Method visitGet not implemented');
+    }
+    
+
+    /**
+     * @param {Set} node
+     * @returns {any}
+     */
+    visitSet(node) {
+        throw new Error('Method visitSet not implemented');
     }
     
 }

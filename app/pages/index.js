@@ -28,15 +28,15 @@ function executeAction() {
             }
 
             let errorMessages = [];
-            let interpreter; // Asegúrate de que esté definido antes de usarlo
+            let interpreter; 
 
             try {
-                const exp = parse(content); // Asume que 'content' es una cadena de entrada válida
+                const exp = parse(content); 
                 interpreter = new InterpreterVisitor();
 
                 for (let i = 0; i < exp.length; i++) {
                     try {
-                        if (exp[i] != null) {  // También captura valores indefinidos y otros valores falsy
+                        if (exp[i] !== undefined) {  
                             exp[i].accept(interpreter);
                         }
                     } catch (error) {
@@ -58,9 +58,8 @@ function executeAction() {
                 message = errorMessages.join('\n');
             }
 
-            console.log(message); // Muestra el mensaje en la consola
+            console.log(message); 
 
-            // Asegúrate de que interpreter.Console esté definido
             const consoleOutput = interpreter?.Console || "";
             if (infoArea) {
                 infoArea.value = `${message}\n${consoleOutput}`;

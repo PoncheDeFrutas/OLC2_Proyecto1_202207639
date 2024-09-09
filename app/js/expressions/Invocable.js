@@ -11,7 +11,7 @@ export class Invocable {
      * @param {InterpreterVisitor} interpreter
      * @param {Array<any>} args
      */
-    invocable(interpreter, args) {
+    invoke(interpreter, args) {
 
     }
 }

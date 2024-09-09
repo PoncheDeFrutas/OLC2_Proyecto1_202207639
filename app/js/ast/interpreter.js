@@ -16,6 +16,9 @@ import {VarDeclarationF} from "../instructions/VarDeclaration.js";
 import {BreakException, ContinueException, ReturnException} from "../instructions/Transfers.js";
 import {Invocable} from "../expressions/Invocable.js";
 import {Natives} from "../instructions/NativeFunction.js";
+import {OutsiderFunction} from "../instructions/OutsiderFunction.js";
+import {Struct} from "../instructions/Struct.js";
+import {Instance} from "../instructions/Instance.js";
 
 export class InterpreterVisitor extends BaseVisitor {
     
@@ -28,7 +31,7 @@ export class InterpreterVisitor extends BaseVisitor {
          * 
          */
         Object.entries(Natives).forEach(([name, func]) => {
-           this.Environment.setVariable(name, func);
+           this.Environment.set(name, func);
         });
         
         /**
@@ -365,14 +368,14 @@ export class InterpreterVisitor extends BaseVisitor {
 
         const result = VarDeclarationF(node.type, node.id, value);
 
-        this.Environment.setVariable(node.id, result);
+        this.Environment.set(node.id, result);
     }
 
     /**
      * @type [BaseVisitor['visitVarValue']]
      */
     visitVarValue(node) {
-        return  this.Environment.getVariable(node.id);
+        return  this.Environment.get(node.id);
     }
 
     /**
@@ -387,8 +390,8 @@ export class InterpreterVisitor extends BaseVisitor {
 
         const operations = {
             '=': () => value,
-            '+=': () => ArithmeticOperation('+', this.Environment.getVariable(node.id), value),
-            '-=': () => ArithmeticOperation('-', this.Environment.getVariable(node.id), value)
+            '+=': () => ArithmeticOperation('+', this.Environment.get(node.id), value),
+            '-=': () => ArithmeticOperation('-', this.Environment.get(node.id), value)
         };
 
         if (!(node.sig in operations)) {
@@ -396,7 +399,7 @@ export class InterpreterVisitor extends BaseVisitor {
         }
 
         const finalValue = operations[node.sig]();
-        this.Environment.assignVariable(node.id, finalValue);
+        this.Environment.assign(node.id, finalValue);
 
         return finalValue;
     }
@@ -434,8 +437,89 @@ export class InterpreterVisitor extends BaseVisitor {
             throw new Error(`Expected ${func.arity()} arguments, got ${args.length}`);
         }
         
-        return func.invocable(this, args);
+        return func.invoke(this, args);
     }
 
+    /**
+     * @type [BaseVisitor['visitFuncDeclaration']]
+     */
+    visitFuncDeclaration(node) {
+        if (!node) return null;
+        const func = new OutsiderFunction(node, this.Environment);
+        this.Environment.set(node.id, func);
+    }
 
+    /**
+     * @type [BaseVisitor['visitStructDeclaration']]
+     */
+    visitStructDeclaration(node) {
+        if (!node) return null;
+        const struct = new Struct(node, this.Environment)
+        this.Environment.set(node.id, struct)
+    }
+
+    /**
+     * @type [BaseVisitor['visitInstance']]
+     */
+    visitInstance(node) {
+        if (!node) return null;
+        const struct = this.Environment.get(node.id);
+
+        if (!(struct instanceof Struct)) {
+            throw new Error('Expected struct in instance creation');
+        }
+        
+        return new Literal({type: node.id, value: struct.invoke(this, node.args)});
+    }
+
+    /**
+     * @type [BaseVisitor['visitGet']]
+     */
+    visitGet(node) {
+        if (!node) return null;
+        const instance = node.object.accept(this);
+
+        if (!(instance instanceof Literal)) {
+            throw new Error('Expected literal in get operation');
+        }
+
+        if (!(instance.value instanceof Instance)) {
+            throw new Error('Expected struct in get operation');
+        }
+        
+        return instance.value.get(node.property);
+    }
+
+    /**
+     * @type [BaseVisitor['visitSet']]
+     */
+    visitSet(node) {
+        if (!node) return null;
+        const instance = node.object.accept(this);
+
+        if (!(instance instanceof Literal)) {
+            throw new Error('Expected literal in set operation');
+        }
+
+        if (!(instance.value instanceof Instance)) {
+            throw new Error('Expected struct in set operation');
+        }
+
+        const value = node.value.accept(this);
+
+        const operations = {
+            '=': () => value,
+            '+=': () => ArithmeticOperation('+', instance.value.get(node.property), value),
+            '-=': () => ArithmeticOperation('-', instance.value.get(node.property), value)
+        };
+
+        if (!(node.sig in operations)) {
+            throw new Error(`Unsupported operation: ${node.sig}`);
+        }
+
+        const finalValue = operations[node.sig]();
+
+        instance.value.set(node.property, finalValue);
+        return finalValue;
+    }
 }

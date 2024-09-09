@@ -771,4 +771,201 @@ export class Callee extends Expression {
     }
 }
     
-export default { Expression, Literal, Group, VarValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, Return, Continue, Break, Case, Switch, For, While, If, Block, Print, ExpressionStatement, VarDeclaration, Callee }
+export class FuncDeclaration extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.type The type of the function.
+ * @param {string} options.id The name of the function.
+ * @param {Expression[]} options.params The parameters of the function.
+ * @param {Block} options.block The body of the function.
+    */
+    constructor({ type, id, params, block }) {
+        super();
+        
+        /**
+         * The type of the function.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The name of the function.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The parameters of the function.
+         * @type {Expression[]}
+        */
+        this.params = params;
+
+
+        /**
+         * The body of the function.
+         * @type {Block}
+        */
+        this.block = block;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitFuncDeclaration(this);
+    }
+}
+    
+export class StructDeclaration extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The name of the struct.
+ * @param {Expression[]} options.fields The fields of the struct.
+    */
+    constructor({ id, fields }) {
+        super();
+        
+        /**
+         * The name of the struct.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The fields of the struct.
+         * @type {Expression[]}
+        */
+        this.fields = fields;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitStructDeclaration(this);
+    }
+}
+    
+export class Instance extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.id The class instance.
+ * @param {Expression[]} options.args The arguments of the class instance.
+    */
+    constructor({ id, args }) {
+        super();
+        
+        /**
+         * The class instance.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The arguments of the class instance.
+         * @type {Expression[]}
+        */
+        this.args = args;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitInstance(this);
+    }
+}
+    
+export class Get extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.object The object to get the property.
+ * @param {string} options.property The property to get.
+    */
+    constructor({ object, property }) {
+        super();
+        
+        /**
+         * The object to get the property.
+         * @type {Expression}
+        */
+        this.object = object;
+
+
+        /**
+         * The property to get.
+         * @type {string}
+        */
+        this.property = property;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitGet(this);
+    }
+}
+    
+export class Set extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.object The object to set the property.
+ * @param {string} options.property The property to set.
+ * @param {Expression} options.value The value to set.
+ * @param {string} options.sig The assignation of the property.
+    */
+    constructor({ object, property, value, sig }) {
+        super();
+        
+        /**
+         * The object to set the property.
+         * @type {Expression}
+        */
+        this.object = object;
+
+
+        /**
+         * The property to set.
+         * @type {string}
+        */
+        this.property = property;
+
+
+        /**
+         * The value to set.
+         * @type {Expression}
+        */
+        this.value = value;
+
+
+        /**
+         * The assignation of the property.
+         * @type {string}
+        */
+        this.sig = sig;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitSet(this);
+    }
+}
+    
+export default { Expression, Literal, Group, VarValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, Return, Continue, Break, Case, Switch, For, While, If, Block, Print, ExpressionStatement, VarDeclaration, Callee, FuncDeclaration, StructDeclaration, Instance, Get, Set }

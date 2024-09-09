@@ -15,8 +15,8 @@ export class Environment {
      * @param {any} value
      * @returns {any}
      */
-    setVariable(name, value) {
-        if (this.table[name]) {
+    set(name, value) {
+        if (this.table.hasOwnProperty(name)) {
             throw new Error(`Variable ${name} already exists in this scope`);
         }
         this.table[name] = value;
@@ -26,26 +26,25 @@ export class Environment {
      * @param {string} name
      * @returns {any}
      */
-    getVariable(name) {
-        const value = this.table[name];
-
-        if (value) return value;
+    get(name) {
+        if (this.table.hasOwnProperty(name)) {
+            return this.table[name];
+        }
 
         if (this.prev) {
-            return this.prev.getVariable(name);
+            return this.prev.get(name);
         }
 
         throw new Error(`Variable ${name} not found`);
     }
 
+
     /**
      * @param {string} name
      * @param {any} value
      */
-    assignVariable(name, value) {
-        const variable = this.table[name];
-
-        if (variable) {
+    assign(name, value) {
+        if (this.table.hasOwnProperty(name)) {
             if (this.table[name].type !== value.type) {
                 this.table[name].value = null;
                 return;
@@ -55,7 +54,7 @@ export class Environment {
         }
 
         if (this.prev) {
-            this.prev.assignVariable(name, value);
+            this.prev.assign(name, value);
             return;
         }
 
