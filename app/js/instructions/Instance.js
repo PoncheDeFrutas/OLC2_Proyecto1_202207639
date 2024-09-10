@@ -3,8 +3,8 @@ import {Environment} from "../ast/environment.js";
 export class Instance {
 
     /**
-     * @param {Struct} classInstance
-     * @type {Environment} properties
+     * @param {Struct|ArrayList} classInstance
+     * @type {Environment|Array} properties
      */
     constructor(classInstance) {
         this.classInstance = classInstance;

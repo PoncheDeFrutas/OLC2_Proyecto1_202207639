@@ -1,9 +1,13 @@
 import {Invocable} from "../expressions/Invocable.js";
 import {StructDeclaration} from "../ast/nodes.js";
-import {Instance} from "./Instance.js";
+import { StructInstance} from "./StructInstance.js";
 
 export class Struct extends Invocable {
 
+    /**
+     * @param {StructDeclaration} node
+     * @param {Environment} closure
+     */
     constructor(node, closure) {
         super();
 
@@ -14,17 +18,20 @@ export class Struct extends Invocable {
         this.closure = closure;
     }
 
+    /**
+     * @returns {number}
+     */
     arity() {
 
     }
 
     /**
      * @type [Invocable['invoke']]
-     * @type {Instance} newInstance
+     * @type {StructInstance} newInstance
      */
     invoke(interpreter, args) {
         const actEnvironment = interpreter.Environment;
-        const newInstance = new Instance(this);
+        const newInstance = new StructInstance(this, this.closure);
         interpreter.Environment = newInstance.properties;
 
         this.node.fields.forEach((field, i) => {
@@ -41,3 +48,4 @@ export class Struct extends Invocable {
         return newInstance;
     }
 }
+

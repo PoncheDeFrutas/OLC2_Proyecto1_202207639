@@ -27,7 +27,9 @@
             'StructDeclaration': nodes.StructDeclaration,
             'Instance': nodes.Instance,
             'Get': nodes.Get,
-            'Set': nodes.Set
+            'Set': nodes.Set,
+            'ArrayInstance': nodes.ArrayInstance,
+            'ArrayList': nodes.ArrayListDeclaration
         }
 
         const node = new type[typeNode](props)
@@ -37,17 +39,18 @@
 }
 
 Program
-    = _ ( Comment )? s:Statements* _ { return s }
+    = _ ( Comment _)* s:Statements* _ { return s }
 
 Statements
     = Statement
     / Comment _ { return undefined }
 
 Statement
-    = s:StructDeclaration _ ( Comment _)? { return s }
-    / f:Function _ ( Comment _)? { return f }
+    = a:ArrayDeclaration _ ";" _( Comment _ )? { return a }
+    / s:StructDeclaration _ ";" _ ( Comment _ )? { return s }
+    / f:Function _ ( Comment _ )? { return f }
     / vd:VarDeclaration _ ";" _ ( Comment _ )? { return vd }
-    / s:Sentence _ ( Comment _)? { return s }
+    / s:Sentence _ ( Comment _ )? { return s }
 
 
 /* ------------------------------------------------------Declaration------------------------------------------------ */
@@ -75,7 +78,7 @@ Param
 /* ------------------------------------------------------Struct----------------------------------------------------- */
 
 StructDeclaration
-    = "struct" _ id:Id _ "{" _ fields:Field+ _ "}" _  ";" {
+    = "struct" _ id:Id _ "{" _ fields:Field+ _ "}" {
         return createNode('StructDeclaration', { id, fields })
     }
 
@@ -86,16 +89,16 @@ Field
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
+/* -------------------------------------------------------Array------------------------------------------------------ */
 
-/* ------------------------------------------------------Matrix----------------------------------------------------- */
+ArrayDeclaration
+    = type:(Types / "var" / Id) _ dim:( "[" _ "]" { return 0 } )+ _ id:Id _ "=" _ exp:Expression {
+        return createNode('ArrayList', { type, dim, id, value: exp })
+    }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-/* ------------------------------------------------------Vector----------------------------------------------------- */
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-/* ------------------------------------------------------Sentence--------------------------------------------------- */
+/* -------------------------------------------------------Sentence--------------------------------------------------- */
 Sentence
     = Print
     / Block
@@ -113,7 +116,7 @@ Sentence
 
 /* ------------------------------------------------------Print------------------------------------------------------ */
 Print
-    = "System.out.println" _ "(" _ exp:Arguments ")" _ ";" {
+    = "System.out.println" _ "(" _ exp:Arguments? _ ")" _ ";" {
         return createNode('Print', { exp })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
@@ -291,7 +294,7 @@ Unary
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 /* ------------------------------------------------------Callee------------------------------------------------------ */
-Callee = initial:DataType operations:(
+Callee = initial:DataType _ operations:(
         ("(" _ args:Arguments? _ ")" { return { type: 'call', args: args || [] } })
         / ("[" _ index:Expression _ "]" { return { type: 'index', index } })
         / ("." _ id:Id { return { type: 'access', id } })
@@ -299,11 +302,10 @@ Callee = initial:DataType operations:(
         return operations.reduce(
             (objective, args) => {
                 const { type, id, index, args: argsList } = args
-
                 if (type === 'call') {
                     return createNode('Callee', { callee:objective , args: argsList || [] })
                 } else if (type === 'index') {
-                    //return createNode('Callee', { callee:objective , index })
+                    return createNode('Get', { object:objective , property:index })
                 } else if (type === 'access') {
                     return createNode('Get', { object:objective , property:id })
                 }
@@ -323,8 +325,17 @@ DataType
     / Char
     / Null
     / Group
+    / ArrayInstance
     / Instance
     / IdValue
+
+ArrayInstance
+    = "{" _ args:Arguments _  "}" {
+        return createNode('ArrayInstance', { args })
+    }
+    / "new" _ type:(Types / "var" / Id) _ dim:( "[" _ exp:Expression _ "]" { return exp })+ {
+        return createNode('ArrayInstance', { type, dim })
+    }
 
 Instance
     = id:Id _ "{" _ args:Attributes "}" {
@@ -417,7 +428,7 @@ Separator
 ReservedWord
     = "if" / "else" / "while" / "for" / "return" / "switch"
     / "case" / "default" / "break" / "continue" / "struct"
-    / "var" / "true" / "false" / "null"
+    / "var" / "true" / "false" / "null" / "System.out.println"
 
 Id
     = !(ReservedWord Separator) id:Identifier { return id; }

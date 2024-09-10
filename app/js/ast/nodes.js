@@ -968,4 +968,94 @@ export class Set extends Expression {
     }
 }
     
-export default { Expression, Literal, Group, VarValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, Return, Continue, Break, Case, Switch, For, While, If, Block, Print, ExpressionStatement, VarDeclaration, Callee, FuncDeclaration, StructDeclaration, Instance, Get, Set }
+export class ArrayListDeclaration extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {string} options.type The type of the array list.
+ * @param {number[]} options.dim The dimension of the array list.
+ * @param {string} options.id The name of the array list.
+ * @param {Expression} options.value The values of the array list.
+    */
+    constructor({ type, dim, id, value }) {
+        super();
+        
+        /**
+         * The type of the array list.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The dimension of the array list.
+         * @type {number[]}
+        */
+        this.dim = dim;
+
+
+        /**
+         * The name of the array list.
+         * @type {string}
+        */
+        this.id = id;
+
+
+        /**
+         * The values of the array list.
+         * @type {Expression}
+        */
+        this.value = value;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitArrayListDeclaration(this);
+    }
+}
+    
+export class ArrayInstance extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression[]} options.args The name of the array instance.
+ * @param {string} options.type The type of the array instance.
+ * @param {number[]} options.dim The dimension of the array instance.
+    */
+    constructor({ args, type, dim }) {
+        super();
+        
+        /**
+         * The name of the array instance.
+         * @type {Expression[]}
+        */
+        this.args = args;
+
+
+        /**
+         * The type of the array instance.
+         * @type {string}
+        */
+        this.type = type;
+
+
+        /**
+         * The dimension of the array instance.
+         * @type {number[]}
+        */
+        this.dim = dim;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitArrayInstance(this);
+    }
+}
+    
+export default { Expression, Literal, Group, VarValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, Return, Continue, Break, Case, Switch, For, While, If, Block, Print, ExpressionStatement, VarDeclaration, Callee, FuncDeclaration, StructDeclaration, Instance, Get, Set, ArrayListDeclaration, ArrayInstance }

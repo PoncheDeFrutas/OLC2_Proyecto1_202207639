@@ -68,5 +68,15 @@ export const Natives = {
             throw new Error('Argument must be a literal');
         }
         return new Literal({type: 'string', value: args[0].type});
-    })
+    }),
+    'System.out.println': new NativeFunction(() => 1, (interpreter, args) => {
+        if (!args) {
+            interpreter.Console += '\n';
+            return null
+        }
+        
+        args.forEach(arg => {
+            interpreter.Console += arg.accept(interpreter).value + '\n';
+        })
+    }),
 }

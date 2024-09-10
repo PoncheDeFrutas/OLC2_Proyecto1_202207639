@@ -84,6 +84,12 @@
 
  * @typedef {import('./nodes').Set} Set
 
+
+ * @typedef {import('./nodes').ArrayListDeclaration} ArrayListDeclaration
+
+
+ * @typedef {import('./nodes').ArrayInstance} ArrayInstance
+
  */
 
 
@@ -343,6 +349,24 @@ export class BaseVisitor {
      */
     visitSet(node) {
         throw new Error('Method visitSet not implemented');
+    }
+    
+
+    /**
+     * @param {ArrayListDeclaration} node
+     * @returns {any}
+     */
+    visitArrayListDeclaration(node) {
+        throw new Error('Method visitArrayListDeclaration not implemented');
+    }
+    
+
+    /**
+     * @param {ArrayInstance} node
+     * @returns {any}
+     */
+    visitArrayInstance(node) {
+        throw new Error('Method visitArrayInstance not implemented');
     }
     
 }

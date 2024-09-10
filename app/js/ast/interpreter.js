@@ -6,7 +6,7 @@ import nodes, {
     Logical,
     Relational,
     VarAssign,
-    VarDeclaration
+    VarDeclaration, VarValue
 } from "./nodes.js";
 import {ArithmeticOperation} from "../expressions/Arithmetic.js";
 import {RelationalOperation} from "../expressions/Relational.js";
@@ -18,7 +18,9 @@ import {Invocable} from "../expressions/Invocable.js";
 import {Natives} from "../instructions/NativeFunction.js";
 import {OutsiderFunction} from "../instructions/OutsiderFunction.js";
 import {Struct} from "../instructions/Struct.js";
-import {Instance} from "../instructions/Instance.js";
+import {AbstractInstance} from "../instructions/AbstractInstance.js";
+import {ArrayList} from "../instructions/ArrayList.js";
+import {StructInstance} from "../instructions/StructInstance.js";
 
 export class InterpreterVisitor extends BaseVisitor {
     
@@ -364,7 +366,7 @@ export class InterpreterVisitor extends BaseVisitor {
      * @type [BaseVisitor['visitVarDeclaration']]
      */
     visitVarDeclaration(node) {
-        const value = node.value ? node.value.accept(this) : null;
+        let value = node.value ? node.value.accept(this) : null;
 
         const result = VarDeclarationF(node.type, node.id, value);
 
@@ -483,7 +485,7 @@ export class InterpreterVisitor extends BaseVisitor {
             throw new Error('Expected literal in get operation');
         }
 
-        if (!(instance.value instanceof Instance)) {
+        if (!(instance.value instanceof AbstractInstance)) {
             throw new Error('Expected struct in get operation');
         }
         
@@ -501,7 +503,7 @@ export class InterpreterVisitor extends BaseVisitor {
             throw new Error('Expected literal in set operation');
         }
 
-        if (!(instance.value instanceof Instance)) {
+        if (!(instance.value instanceof AbstractInstance)) {
             throw new Error('Expected struct in set operation');
         }
 
@@ -521,5 +523,70 @@ export class InterpreterVisitor extends BaseVisitor {
 
         instance.value.set(node.property, finalValue);
         return finalValue;
+    }
+
+    /**
+     * @type [BaseVisitor['visitArrayListDeclaration']]
+     */
+    visitArrayListDeclaration(node) {
+        if (!node) return null;
+
+        let values  = node.value.accept(this);
+
+        if (node.value instanceof VarValue) {
+            values = JSON.parse(JSON.stringify(values.value.properties));
+        }
+
+
+        const arrayList = new ArrayList(node, values)
+        const result = arrayList.invoke(this, node.args)
+
+        this.Environment.set(node.id, result);
+    }
+
+    /**
+     * @type [BaseVisitor['visitSet']]
+     */
+    visitArrayInstance(node) {
+        if (!node) return null;
+
+        if (node.args) {
+            const results = node.args.map(exp => {
+                if (exp != null) {
+                    return exp.accept(this);
+                }
+                return null;
+            });
+
+            const firstType = results[0]?.type;
+            for (let i = 1; i < results.length; i++) {
+                if (results[i]?.type !== firstType) {
+                    throw new Error("Array elements must be of the same type");
+                }
+            }
+
+            return new Literal({ type: firstType+'[]', value: results });
+        }
+
+        if (node.type && node.dim) {
+            const defaultValues = {
+                int: new Literal({ value: 0, type: "int" }),
+                float: new Literal({ value: 0.0, type: "float" }),
+                bool: new Literal({ value: false, type: "bool" }),
+                string: new Literal({ value: '', type: "string" }),
+                char: new Literal({ value: '', type: "char" })
+            }
+            
+            let defaultValue = defaultValues[node.type] !== undefined ? defaultValues[node.type] : new Literal({ value: null, type: node.type });
+
+            for (let i = node.dim.length - 1; i >= 0; i--) {
+                defaultValue = new Literal({
+                    value: Array.from({ length: node.dim[i].value }, () => defaultValue),
+                    type: defaultValue.type + '[]'
+                });
+            }
+
+            return defaultValue;
+        }
     }
 }
