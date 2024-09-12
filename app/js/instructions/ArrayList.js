@@ -18,15 +18,6 @@ export class ArrayList extends Invocable {
      * @returns {number}
      */
     arity() {
-        let dimensions = 0;
-        let currentArray = this.args.value;
-
-        while (Array.isArray(currentArray)) {
-            dimensions++;
-            currentArray = currentArray[0];
-        }
-
-        return dimensions;
 
     }
 
@@ -35,12 +26,65 @@ export class ArrayList extends Invocable {
      * @type {ArrayListInstance} newInstance
      */
     invoke(interpreter, args) {
-        if (this.arity() !== this.node.dim.length) {
-            throw new Error('Invalid number of dimensions');
+        const node = this.node;
+        if (node.dim && node.type) {
+            const result = this.createDefaultArray(node.type, node.dim);
+            console.log(result); 
+            return result;
         }
-        if (this.args.type !== this.node.type + "[]".repeat(this.arity())) {
-            throw new Error('Invalid type');
+        if (node.args) {
+            const result = this.getArray(interpreter);
+            console.log(result);
+            return result;
         }
-        return new Literal ({type: this.args.type, value:new ArrayListInstance(this, this.args)});
+    }
+
+    getDefaultValue(type) {
+        const defaultValues = {
+            int: new Literal({ value: 0, type: "int" }),
+            float: new Literal({ value: 0.0, type: "float" }),
+            bool: new Literal({ value: false, type: "bool" }),
+            string: new Literal({ value: '', type: "string" }),
+            char: new Literal({ value: '', type: "char" })
+        };
+
+        return defaultValues[type] !== undefined ? defaultValues[type] : new Literal({ value: null, type: type });
+    }
+
+    createDefaultArray(type, dim) {
+        const typeString = type + '[]'.repeat(dim.length);
+
+        if (dim.length === 1) {
+            const literalArray = Array.from({ length: dim[0].value }, () => this.getDefaultValue(type));
+            return new Literal({ value: new ArrayListInstance(null, literalArray), type: typeString });
+        } else {
+            return new Literal({
+                value: new ArrayListInstance(
+                    null,
+                    Array.from({ length: dim[0].value }, () =>
+                        this.createDefaultArray(type, dim.slice(1))
+                    )
+                ),
+                type: typeString
+            });
+        }
+    }
+    
+    getArray(interpreter){
+        const result = this.node.args.map( exp => {
+            if (exp != null) {
+                const result =  exp.accept(interpreter);
+                return result;
+            }
+            return null;
+        })
+
+        if (this.node.type === undefined) {
+            this.node.type = result[0].type + '[]';
+        } else {
+            this.node.type += '[]'
+        }
+
+        return new ArrayListInstance(null, result);
     }
 }

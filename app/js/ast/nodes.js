@@ -12,7 +12,7 @@
      */
      
 
-/**
+    /**
  * @typedef {import('./visitor').BaseVisitor} BaseVisitor
  */
 

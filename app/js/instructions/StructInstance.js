@@ -44,7 +44,7 @@ export class StructInstance extends AbstractInstance {
 export class ArrayListInstance extends AbstractInstance {
     /**
      * @param {ArrayList} classInstance
-     * @param {Array} arrayList
+     * @param {Literal} arrayList
      */
     constructor(classInstance, arrayList) {
         super(classInstance, arrayList);
@@ -62,10 +62,10 @@ export class ArrayListInstance extends AbstractInstance {
         if (index.type !== 'int') {
             throw new Error('Index must be a number');
         }
-        if (index.value < 0 || index.value >= this.properties.value.length) {
+        if (index.value < 0 || index.value >= this.properties.length) {
             throw new Error('Index out of bounds');
         }
-        this.properties.value[index.value] = value;
+        this.properties[index.value] = value;
     }
 
     /**
@@ -80,11 +80,11 @@ export class ArrayListInstance extends AbstractInstance {
         if (index.type !== 'int') {
             throw new Error('Index must be a number');
         }
-        if (index.value < 0 || index.value >= this.properties.value.length) {
+        if (index.value < 0 || index.value >= this.properties.length) {
             throw new Error('Index out of bounds');
         }
 
-        return this.properties.value[index.value];
+        return this.properties[index.value];
     }
 
     /**
@@ -92,6 +92,5 @@ export class ArrayListInstance extends AbstractInstance {
      * @returns {ArrayListInstance}
      */
     clone() {
-        super.clone();
     }
 }

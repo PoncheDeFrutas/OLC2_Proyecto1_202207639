@@ -29,7 +29,6 @@
             'Get': nodes.Get,
             'Set': nodes.Set,
             'ArrayInstance': nodes.ArrayInstance,
-            'ArrayList': nodes.ArrayListDeclaration
         }
 
         const node = new type[typeNode](props)
@@ -46,8 +45,7 @@ Statements
     / Comment _ { return undefined }
 
 Statement
-    = a:ArrayDeclaration _ ";" _( Comment _ )? { return a }
-    / s:StructDeclaration _ ";" _ ( Comment _ )? { return s }
+    = s:StructDeclaration _ ";" _ ( Comment _ )? { return s }
     / f:Function _ ( Comment _ )? { return f }
     / vd:VarDeclaration _ ";" _ ( Comment _ )? { return vd }
     / s:Sentence _ ( Comment _ )? { return s }
@@ -55,8 +53,8 @@ Statement
 
 /* ------------------------------------------------------Declaration------------------------------------------------ */
 VarDeclaration
-    = type:(Types / "var" / Id) _ id:Id _ exp:("=" _ exp:Expression { return exp })? {
-        return createNode('VarDeclaration', { type, id, value: exp || null })
+    = type:(Types / "var" / Id) _ dim:("[" _ "]" _ {return 0})* id:Id _ exp:("=" _ exp:Expression { return exp })? {
+        return createNode('VarDeclaration', { type:(type + '[]'.repeat(dim.length)), id , value: exp || null })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -85,15 +83,6 @@ StructDeclaration
 Field
     = vd:VarDeclaration _ ";" _ {
         return vd
-    }
-
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-/* -------------------------------------------------------Array------------------------------------------------------ */
-
-ArrayDeclaration
-    = type:(Types / "var" / Id) _ dim:( "[" _ "]" { return 0 } )+ _ id:Id _ "=" _ exp:Expression {
-        return createNode('ArrayList', { type, dim, id, value: exp })
     }
 
 /* ------------------------------------------------------------------------------------------------------------------ */
