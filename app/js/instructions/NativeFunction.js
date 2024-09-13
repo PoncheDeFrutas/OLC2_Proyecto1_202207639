@@ -1,5 +1,6 @@
 import {Invocable} from "../expressions/Invocable.js";
 import {Literal} from "../ast/nodes.js";
+import {ArrayListInstance, StructInstance} from "./StructInstance.js";
 
 class NativeFunction extends Invocable {
     constructor(arity, func) {
@@ -23,7 +24,7 @@ export const Natives = {
         }
         return new Literal({type: 'int', value});
     }),
-    'parseFloat': new NativeFunction(() => 1, (interpreter, args) => {
+    'parsefloat': new NativeFunction(() => 1, (interpreter, args) => {
         if (!(args[0] instanceof Literal)) {
             throw new Error('Argument must be a literal');
         }
@@ -78,5 +79,36 @@ export const Natives = {
         args.forEach(arg => {
             interpreter.Console += arg.accept(interpreter).value + '\n';
         })
+    }),
+    'indexOf': new NativeFunction(() => 2, (interpreter, args) => {
+        if (!(args[0] instanceof Literal) || !(args[1] instanceof Literal)) {
+            throw new Error('Arguments must be literals');
+        }
+        if (!(args[0].value instanceof ArrayListInstance)) {
+            throw new Error('First argument must be an ArrayList');
+        }
+
+        return new Literal({
+            type: 'int',
+            value: args[0].value.properties.findIndex(prop => prop.value === args[1].value && prop.type === args[1].type
+        )});
+    }),
+    'join': new NativeFunction(() => 1, (interpreter, args) => {
+        if (!(args[0] instanceof Literal)) {
+            throw new Error('Argument must be a literal');
+        }
+        if (!(args[0].value instanceof ArrayListInstance)) {
+            throw new Error('Argument must be an ArrayList');
+        }
+        return new Literal({type: 'string', value: args[0].value.properties.map(prop => prop.value).join(',')});
+    }),
+    'Object.keys': new NativeFunction(() => 1, (interpreter, args) => {
+        if (!(args[0] instanceof Literal)) {
+            throw new Error('Argument must be a literal');
+        }
+        if (!(args[0].value instanceof StructInstance)) {
+            throw new Error('Argument must be an Struct');
+        }
+        return new Literal({ type: 'string', value: `[${Object.keys(args[0].value.properties.table).join(', ')}]` });
     }),
 }

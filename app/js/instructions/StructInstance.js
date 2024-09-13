@@ -2,7 +2,7 @@ import {AbstractInstance} from "./AbstractInstance.js";
 import {Environment} from "../ast/environment.js";
 import {Struct} from "./Struct.js";
 import {ArrayList} from "./ArrayList.js";
-import {Literal} from "../ast/nodes.js";
+import {Callee, Literal} from "../ast/nodes.js";
 
 export class StructInstance extends AbstractInstance {
     /**
@@ -57,7 +57,7 @@ export class ArrayListInstance extends AbstractInstance {
      */
     set(index, value) {
         if (!(index instanceof Literal)) {
-            throw new Error('Index out of bounds');
+            throw new Error('Index must be a literal');
         }
         if (index.type !== 'int') {
             throw new Error('Index must be a number');
@@ -74,8 +74,12 @@ export class ArrayListInstance extends AbstractInstance {
      * @returns {*} The value of the property.
      */
     get(index) {
+        if (index === "length") {
+            return new Literal({value: this.properties.length, type: "int"});
+        }
+
         if (!(index instanceof Literal)) {
-            throw new Error('Index out of bounds');
+            throw new Error('Index must be a Literal');
         }
         if (index.type !== 'int') {
             throw new Error('Index must be a number');

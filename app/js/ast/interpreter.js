@@ -1,6 +1,6 @@
 import {BaseVisitor} from "./visitor.js";
 import {Environment} from "./environment.js";
-import nodes, {Expression, Literal, Logical, Relational, VarAssign, VarDeclaration, VarValue} from "./nodes.js";
+import nodes, {Callee, Expression, Literal, Logical, Relational, VarAssign, VarDeclaration, VarValue} from "./nodes.js";
 import {ArithmeticOperation} from "../expressions/Arithmetic.js";
 import {RelationalOperation} from "../expressions/Relational.js";
 import {LogicalOperation} from "../expressions/Logical.js";
@@ -160,7 +160,9 @@ export class InterpreterVisitor extends BaseVisitor {
         this.Environment = new Environment(this.Environment);
 
         node.stmt.forEach(statement => {
-            statement.accept(this);
+            if (statement != null) {
+                statement.accept(this);
+            }
         });
 
         this.Environment = this.Environment.prev;
@@ -331,6 +333,43 @@ export class InterpreterVisitor extends BaseVisitor {
     }
 
     /**
+     * @type [BaseVisitor['visitForEach']]
+     */
+    visitForEach(node) {
+        if (!node) return null;
+        
+        if (!(node.vd instanceof VarDeclaration)) {
+            throw new Error('Invalid initialization in foreach loop');
+        }
+
+        const array = node.array.accept(this);
+
+        if (!(array instanceof Literal) || !(array.value.properties instanceof Array)) {
+            throw new Error('Expected array in foreach loop');
+        }
+
+        const elements = array.value.properties;
+        const lastEnvironment = this.Environment;
+        const originalStmt = node.stmt.stmt.slice();
+
+        try {
+            for (let i = 0; i < elements.length; i++) {
+                node.vd.value = elements[i];
+                node.stmt.stmt.unshift(node.vd);
+                node.stmt.accept(this);
+                node.stmt.stmt.shift();
+            }
+        } catch (error) {
+            this.Environment = lastEnvironment
+            if (error instanceof BreakException) { return null; }
+            if (error instanceof ContinueException) { return this.visitForEach(node); }
+            throw error;
+        } finally {
+            node.stmt.stmt = originalStmt;
+        }
+    }
+    
+    /**
      * @type [BaseVisitor['visitContinue']]
      */
     visitContinue(node) {
@@ -362,8 +401,10 @@ export class InterpreterVisitor extends BaseVisitor {
     visitVarDeclaration(node) {
         let value = node.value ? node.value.accept(this) : null;
 
-        if (value.value instanceof ArrayListInstance) {
-            value = cloneLiteral(value);
+        if (value) {
+            if (value.value instanceof ArrayListInstance) {
+                value = cloneLiteral(value);
+            }
         }
 
         const result = VarDeclarationF(node.type, node.id, value);
@@ -485,6 +526,15 @@ export class InterpreterVisitor extends BaseVisitor {
 
         if (!(instance.value instanceof AbstractInstance)) {
             throw new Error('Expected struct in get operation');
+        }
+
+        if (node.property instanceof Callee) {
+            node.property.args.unshift(instance)
+            return node.property.accept(this);
+        }
+
+        if (node.property instanceof VarValue) {
+            return instance.value.get(node.property.accept(this));
         }
         
         return instance.value.get(node.property);

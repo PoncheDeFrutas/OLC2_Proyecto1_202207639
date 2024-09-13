@@ -12,7 +12,7 @@
      */
      
 
-    /**
+/**
  * @typedef {import('./visitor').BaseVisitor} BaseVisitor
  */
 
@@ -548,6 +548,47 @@ export class For extends Expression {
     }
 }
     
+export class ForEach extends Expression {
+
+    /**
+    * @param {Object} options
+    * @param {Expression} options.vd The name of the variable.
+ * @param {Expression} options.array The expression to iterate.
+ * @param {Block} options.stmt The instructions of the for each loop.
+    */
+    constructor({ vd, array, stmt }) {
+        super();
+        
+        /**
+         * The name of the variable.
+         * @type {Expression}
+        */
+        this.vd = vd;
+
+
+        /**
+         * The expression to iterate.
+         * @type {Expression}
+        */
+        this.array = array;
+
+
+        /**
+         * The instructions of the for each loop.
+         * @type {Block}
+        */
+        this.stmt = stmt;
+
+    }
+
+    /**
+     * @param {BaseVisitor} visitor
+     */
+    accept(visitor) {
+        return visitor.visitForEach(this);
+    }
+}
+    
 export class While extends Expression {
 
     /**
@@ -968,55 +1009,6 @@ export class Set extends Expression {
     }
 }
     
-export class ArrayListDeclaration extends Expression {
-
-    /**
-    * @param {Object} options
-    * @param {string} options.type The type of the array list.
- * @param {number[]} options.dim The dimension of the array list.
- * @param {string} options.id The name of the array list.
- * @param {Expression} options.value The values of the array list.
-    */
-    constructor({ type, dim, id, value }) {
-        super();
-        
-        /**
-         * The type of the array list.
-         * @type {string}
-        */
-        this.type = type;
-
-
-        /**
-         * The dimension of the array list.
-         * @type {number[]}
-        */
-        this.dim = dim;
-
-
-        /**
-         * The name of the array list.
-         * @type {string}
-        */
-        this.id = id;
-
-
-        /**
-         * The values of the array list.
-         * @type {Expression}
-        */
-        this.value = value;
-
-    }
-
-    /**
-     * @param {BaseVisitor} visitor
-     */
-    accept(visitor) {
-        return visitor.visitArrayListDeclaration(this);
-    }
-}
-    
 export class ArrayInstance extends Expression {
 
     /**
@@ -1058,4 +1050,4 @@ export class ArrayInstance extends Expression {
     }
 }
     
-export default { Expression, Literal, Group, VarValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, Return, Continue, Break, Case, Switch, For, While, If, Block, Print, ExpressionStatement, VarDeclaration, Callee, FuncDeclaration, StructDeclaration, Instance, Get, Set, ArrayListDeclaration, ArrayInstance }
+export default { Expression, Literal, Group, VarValue, Unary, Arithmetic, Relational, Logical, Ternary, VarAssign, Return, Continue, Break, Case, Switch, For, ForEach, While, If, Block, Print, ExpressionStatement, VarDeclaration, Callee, FuncDeclaration, StructDeclaration, Instance, Get, Set, ArrayInstance }

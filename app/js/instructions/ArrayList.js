@@ -1,5 +1,5 @@
 import {ArrayListInstance} from "./StructInstance.js";
-import {ArrayListDeclaration, Literal} from "../ast/nodes.js";
+import {Literal} from "../ast/nodes.js";
 import {Invocable} from "../expressions/Invocable.js";
 
 
@@ -8,7 +8,7 @@ export class ArrayList extends Invocable {
     constructor(node, args) {
         super();
 
-        /** @type {ArrayListDeclaration} */
+        /** @type {ArrayListInstance} */
         this.node = node;
         /** @type {Array<any>} */
         this.args = args;
@@ -29,7 +29,8 @@ export class ArrayList extends Invocable {
         const node = this.node;
         if (node.dim && node.type) {
             const result = this.createDefaultArray(node.type, node.dim);
-            console.log(result); 
+            console.log(result);
+            this.node.type = node.type + '[]'.repeat(node.dim.length);
             return result;
         }
         if (node.args) {
@@ -52,21 +53,17 @@ export class ArrayList extends Invocable {
     }
 
     createDefaultArray(type, dim) {
-        const typeString = type + '[]'.repeat(dim.length);
-
         if (dim.length === 1) {
             const literalArray = Array.from({ length: dim[0].value }, () => this.getDefaultValue(type));
-            return new Literal({ value: new ArrayListInstance(null, literalArray), type: typeString });
+            return new ArrayListInstance(null, literalArray)
         } else {
-            return new Literal({
-                value: new ArrayListInstance(
-                    null,
-                    Array.from({ length: dim[0].value }, () =>
-                        this.createDefaultArray(type, dim.slice(1))
-                    )
-                ),
-                type: typeString
-            });
+            const literalsArray = Array.from({ length: dim[0].value }, () =>
+                new Literal({
+                    type: type + '[]'.repeat(dim.length - 1),
+                    value: this.createDefaultArray(type, dim.slice(1))
+                })
+            );
+            return new ArrayListInstance(null, literalsArray);
         }
     }
     

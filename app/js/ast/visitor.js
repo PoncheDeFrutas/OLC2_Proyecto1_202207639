@@ -49,6 +49,9 @@
  * @typedef {import('./nodes').For} For
 
 
+ * @typedef {import('./nodes').ForEach} ForEach
+
+
  * @typedef {import('./nodes').While} While
 
 
@@ -83,9 +86,6 @@
 
 
  * @typedef {import('./nodes').Set} Set
-
-
- * @typedef {import('./nodes').ArrayListDeclaration} ArrayListDeclaration
 
 
  * @typedef {import('./nodes').ArrayInstance} ArrayInstance
@@ -245,6 +245,15 @@ export class BaseVisitor {
     
 
     /**
+     * @param {ForEach} node
+     * @returns {any}
+     */
+    visitForEach(node) {
+        throw new Error('Method visitForEach not implemented');
+    }
+    
+
+    /**
      * @param {While} node
      * @returns {any}
      */
@@ -349,15 +358,6 @@ export class BaseVisitor {
      */
     visitSet(node) {
         throw new Error('Method visitSet not implemented');
-    }
-    
-
-    /**
-     * @param {ArrayListDeclaration} node
-     * @returns {any}
-     */
-    visitArrayListDeclaration(node) {
-        throw new Error('Method visitArrayListDeclaration not implemented');
     }
     
 

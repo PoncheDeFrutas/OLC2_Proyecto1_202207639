@@ -17,6 +17,7 @@
             'If': nodes.If,
             'While': nodes.While,
             'For': nodes.For,
+            'ForEach': nodes.ForEach,
             'Case': nodes.Case,
             'Switch': nodes.Switch,
             'Break': nodes.Break,
@@ -60,8 +61,8 @@ VarDeclaration
 
 /* ------------------------------------------------------Function--------------------------------------------------- */
 Function
-    = type:(Types/ Id / "var") _ id:Id _ "(" _ params:Parameters? ")" _ block:Block {
-        return createNode('Function', { type, id, params: params || [], block })
+    = type:(Types / "var" / Id) _ dim:("[" _ "]" _ {return 0})* id:Id _ "(" _ params:Parameters? ")" _ block:Block {
+        return createNode('Function', { type:(type + '[]'.repeat(dim.length)), id, params: params || [], block })
     }
 
 Parameters
@@ -94,6 +95,7 @@ Sentence
     / If
     / While
     / For
+    / ForEach
     / Switch
     / Break
     / Continue
@@ -134,6 +136,11 @@ While
 For
     = "for" _ "(" _ init:Statement _ cond:Ternary _ ";" _ update:Expression _ ")" _ stmt:Block {
         return createNode('For', { init, cond, update, stmt })
+    }
+
+ForEach
+    = "for" _ "(" vd:VarDeclaration  ":" _ array:Expression _ ")" _ stmt:Block {
+        return createNode('ForEach', { vd, array, stmt })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -279,14 +286,20 @@ Mul
 Unary
     = "-" _ dt:Unary { return createNode('Unary', { op: '-', exp: dt }) }
     / "!" _ dt:Unary { return createNode('Unary', { op: '!', exp: dt }) }
+    / ArrMethods
+
+ArrMethods
+    = Callee _ "." _ method:("indexOf"/"length"/"Join") exp:( "(" _ arg:Expression? _ ")" { return arg })? {
+        return createNode('ArrMethods', { callee: Callee, method, exp })
+    }
     / Callee
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 /* ------------------------------------------------------Callee------------------------------------------------------ */
 Callee = initial:DataType _ operations:(
         ("(" _ args:Arguments? _ ")" { return { type: 'call', args: args || [] } })
+        / ("." _ id:("length"/ArrayMethods/Id/Callee) { return { type: 'access', id } })
         / ("[" _ index:Expression _ "]" { return { type: 'index', index } })
-        / ("." _ id:Id { return { type: 'access', id } })
     )* {
         return operations.reduce(
             (objective, args) => {
@@ -304,6 +317,7 @@ Callee = initial:DataType _ operations:(
     }
 
 
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 /* -----------------------------------------------------DataType----------------------------------------------------- */
@@ -316,6 +330,7 @@ DataType
     / Group
     / ArrayInstance
     / Instance
+    / typeof
     / IdValue
 
 ArrayInstance
@@ -341,8 +356,25 @@ Attribute
         return createNode('VarAssign', { id, sig:"=", assign })
     }
 
+ArrayMethods
+    = method:("indexOf"/"length"/"join") exp:( "(" _ arg:Expression? _ ")" { return arg })? {
+        const varValue = createNode('VarValue', { id:method })
+        return createNode('Callee', { callee: varValue, args: exp ? [exp] : [] })
+    }
+
+typeof
+    = id:"typeof" _ exp:Expression  {
+         const varValue = createNode('VarValue', { id })
+         return createNode('Callee', { callee: varValue, args: [exp] || [] })
+    }
+
 IdValue
-    = id:Id {
+    =
+    id:"Object.keys" {
+        return createNode('VarValue', { id })
+    }
+
+    / id:Id {
         return createNode('VarValue', { id })
     }
 
