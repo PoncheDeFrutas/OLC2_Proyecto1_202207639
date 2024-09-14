@@ -4,36 +4,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('create-tab').addEventListener('click', () => {
         addTab('Editor');
     });
-
-    document.getElementById('toggle-to-single').addEventListener('click', () => {
-        document.body.classList.add('single-view');
-        document.getElementById('toggle-to-single').style.display = 'none';
-        document.getElementById('toggle-to-double').style.display = 'inline-block';
-
-        document.getElementById('create-tab').style.display = 'none';
-        document.getElementById('open-file').style.display = 'none';
-        document.getElementById('save-file').style.display = 'none';
-        document.getElementById('execute').style.display = 'none';
-        document.getElementById('report1').style.display = 'inline-block';
-        document.getElementById('report2').style.display = 'inline-block';
-
-        document.querySelector('.single-section').style.display = 'flex';
-    });
-
-    document.getElementById('toggle-to-double').addEventListener('click', () => {
-        document.body.classList.remove('single-view');
-        document.getElementById('toggle-to-single').style.display = 'inline-block';
-        document.getElementById('toggle-to-double').style.display = 'none';
-
-        document.getElementById('create-tab').style.display = 'inline-block';
-        document.getElementById('open-file').style.display = 'inline-block';
-        document.getElementById('save-file').style.display = 'inline-block';
-        document.getElementById('execute').style.display = 'inline-block';
-        document.getElementById('report1').style.display = 'none';
-        document.getElementById('report2').style.display = 'none';
-
-        document.querySelector('.single-section').style.display = 'none';
-    });
 });
 
 document.addEventListener('click', (event) => {

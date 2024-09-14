@@ -10,8 +10,6 @@
             'VarDeclaration': nodes.VarDeclaration,
             'Print': nodes.Print,
             'VarAssign': nodes.VarAssign,
-            'VecAssign': nodes.VecAssign,
-            'MatAssign': nodes.MatAssign,
             'ExpressionStatement': nodes.ExpressionStatement,
             'VarValue': nodes.VarValue,
             'Ternary': nodes.Ternary,
@@ -19,30 +17,19 @@
             'If': nodes.If,
             'While': nodes.While,
             'For': nodes.For,
+            'ForEach': nodes.ForEach,
             'Case': nodes.Case,
             'Switch': nodes.Switch,
             'Break': nodes.Break,
             'Continue': nodes.Continue,
             'Return': nodes.Return,
+            'Callee': nodes.Callee,
+            'Function': nodes.FuncDeclaration,
             'StructDeclaration': nodes.StructDeclaration,
-            'Field': nodes.Field,
-            'MatDeclaration': nodes.MatDeclaration,
-            'InitialMatValue': nodes.InitialMatValue,
-            'MatSize': nodes.MatSize,
-            'MatValue': nodes.MatValue,
-            'VecDeclaration': nodes.VecDeclaration,
-            'InitialVecValue': nodes.InitialVecValue,
-            'VecSize': nodes.VecSize,
-            'VecValue': nodes.VecValue,
-            'VecIndexOf': nodes.VecIndexOf,
-            'MatIndexOf': nodes.MatIndexOf,
-            'VecJoin': nodes.VecJoin,
-            'MatJoin': nodes.MatJoin,
-            'VecLength': nodes.VecLength,
-            'MatLength': nodes.MatLength,
-            'Function': nodes.Function,
-            'StructAccess': nodes.StructAccess,
-            'StructAssign': nodes.StructAssign,
+            'Instance': nodes.Instance,
+            'Get': nodes.Get,
+            'Set': nodes.Set,
+            'ArrayInstance': nodes.ArrayInstance,
         }
 
         const node = new type[typeNode](props)
@@ -52,123 +39,63 @@
 }
 
 Program
-    = _ ( Comment )? s:Statements* _ { return s }
+    = _ ( Comment _)* s:Statements* _ { return s }
 
 Statements
     = Statement
     / Comment _ { return undefined }
 
 Statement
-    = f:Function _ ( Comment _ )? { return f }
-    / vd:VarDeclaration _ ( Comment _ )? { return vd }
-    / sd:StructDeclaration _ ( Comment _ )? { return sd }
-    / md:MatDeclaration _ ( Comment _ )? { return md }
-    / vd:VecDeclaration _ ( Comment _ )? { return vd }
-    / s:Sentence _ ( Comment _)? { return s }
+    = s:StructDeclaration _ ";" _ ( Comment _ )? { return s }
+    / f:Function _ ( Comment _ )? { return f }
+    / vd:VarDeclaration _ ";" _ ( Comment _ )? { return vd }
+    / s:Sentence _ ( Comment _ )? { return s }
 
-
-Function
-    = type:(Types/Id) _ id:Id _ "(" _ params:Params? _ ")" _ block:Block {
-        return createNode('Function', { type, id, params, block })
-    }
-
-Params
-    = head:Param tail:( _ "," _ Param)* {
-        return [head].concat(tail.map(e => e[3]));
-    }
-
-Param
-    = type:(Types/Id) _ "[" _ "]" _ "[" _ "]" _ id:Id {
-        return createNode('MatDeclaration', { type, id, exp: null })
-    }
-    / type:(Types/Id) _ "[" _ "]" _ id:Id {
-        return createNode('VecDeclaration', { type, id, exp: null })
-    }
-    / type:(Types/Id) _ id:Id {
-        return createNode('VarDeclaration', { type, id, value: null })
-    }
 
 /* ------------------------------------------------------Declaration------------------------------------------------ */
 VarDeclaration
-    = type:(Types / "var") _ id:Id _ exp:("=" _ exp:Expression {return exp})? _ ";" {
-        return createNode('VarDeclaration', { type, id, value: exp || null })
+    = type:(Types / "var" / Id) _ dim:("[" _ "]" _ {return 0})* id:Id _ exp:("=" _ exp:Expression { return exp })? {
+        return createNode('VarDeclaration', { type:(type + '[]'.repeat(dim.length)), id , value: exp || null })
     }
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+/* ------------------------------------------------------Function--------------------------------------------------- */
+Function
+    = type:(Types / "var" / Id) _ dim:("[" _ "]" _ {return 0})* id:Id _ "(" _ params:Parameters? ")" _ block:Block {
+        return createNode('Function', { type:(type + '[]'.repeat(dim.length)), id, params: params || [], block })
+    }
+
+Parameters
+    = head:Param _ tail:( "," _ param:Param _ { return param })* {
+        return [head, ...tail]
+    }
+
+Param
+    = VarDeclaration
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 /* ------------------------------------------------------Struct----------------------------------------------------- */
+
 StructDeclaration
-    = "struct" _ id:Id _ "{" _ (Comment _)?  fields:(fields:Field _ (Comment _)? {return fields})* "}" _ ";"{
+    = "struct" _ id:Id _ "{" _ fields:Field+ _ "}" {
         return createNode('StructDeclaration', { id, fields })
-     }
+    }
 
 Field
-    = type:(Types/Id) _ id:Id _ ";"  {
-        return createNode('Field', { type, id })
-     }
+    = vd:VarDeclaration _ ";" _ {
+        return vd
+    }
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-
-/* ------------------------------------------------------Matrix----------------------------------------------------- */
-MatDeclaration
-    =  type:(Types/Id) _ "[" _ "]" _ "[" _ "]" _ id:Id _ "=" _ mi:MatInitialization _ ";" {
-        return createNode('MatDeclaration', { type, id, exp: mi })
-    }
-
-MatInitialization
-    = InitialMatValue
-    / MatSize
-    / Id
-
-InitialMatValue
-    = "{" _ expM:ExpressionMatrix _ "}" {
-        return createNode('InitialMatValue', { exp: expM })
-    }
-
-MatSize
-    = "new" _ type:(Types/Id) _ "[" _ exp1:Expression _ "]" _ "[" _ exp2:Expression _ "]" {
-        return createNode('MatSize', { type, exp1, exp2 })
-    }
-
-
-ExpressionMatrix
-    = head:InitialVecValue tail:( _ "," _ InitialVecValue)* {
-        return [head].concat(tail.map(e => e[3]));
-    }
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-/* ------------------------------------------------------Vector----------------------------------------------------- */
-VecDeclaration
-    =  type:(Types/Id) _ "[" _ "]" _ id:Id _ "=" _ vi:Expression _ ";" {
-        return createNode('VecDeclaration', { type, id, exp: vi })
-    }
-
-VecInitialization
-    = InitialVecValue
-    / VecSize
-
-InitialVecValue
-    = "{" _ expL:ExpressionList _ "}" {
-        return createNode('InitialVecValue', { exp: expL })
-    }
-
-VecSize
-    = "new" _ type:(Types/Id) _ "[" _ exp:Expression _ "]" {
-        return createNode('VecSize', { type, exp })
-    }
-
-ExpressionList
-    = head:Expression tail:( _ "," _ Expression)* {
-        return [head].concat(tail.map(e => e[3]));
-    }
-/* ------------------------------------------------------------------------------------------------------------------ */
-
-/* ------------------------------------------------------Sentence--------------------------------------------------- */
+/* -------------------------------------------------------Sentence--------------------------------------------------- */
 Sentence
     = Print
     / Block
     / If
     / While
     / For
+    / ForEach
     / Switch
     / Break
     / Continue
@@ -180,12 +107,12 @@ Sentence
 
 /* ------------------------------------------------------Print------------------------------------------------------ */
 Print
-    = "System.out.println" _ "(" _ exp:ExpressionList _ ")" _ ";" {
+    = "System.out.println" _ "(" _ exp:Arguments? _ ")" _ ";" {
         return createNode('Print', { exp })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
-/* ------------------------------------------------------Block------------------------------------------------------ */
+/* ------------------------------------------------------Block------------------------------------------------------- */
 Block
     = "{" _ s:Statements* _ "}" {
         return createNode('Block', { stmt: s })
@@ -209,6 +136,11 @@ While
 For
     = "for" _ "(" _ init:Statement _ cond:Ternary _ ";" _ update:Expression _ ")" _ stmt:Block {
         return createNode('For', { init, cond, update, stmt })
+    }
+
+ForEach
+    = "for" _ "(" vd:VarDeclaration  ":" _ array:Expression _ ")" _ stmt:Block {
+        return createNode('ForEach', { vd, array, stmt })
     }
 /* ------------------------------------------------------------------------------------------------------------------ */
 
@@ -245,18 +177,18 @@ Return
 Expression
     = Assignment
 
+Arguments
+    = arg:Expression _ args:( "," _ exp:Expression _ { return exp } )* {
+        return [arg, ...args]
+    }
+
 Assignment
-    =  id:Id _ "[" _ exp1:Expression _ "]" _ "[" _ exp2:Expression _ "]" _ sig:("=" / "+=" / "-=") _ assign:Assignment {
-        return createNode('MatAssign', { id, exp1, exp2, sig, assign })
-    }
-    / id:Id _ "[" _ exp:Expression _ "]" _ sig:("=" / "+=" / "-=") _ assign:Assignment {
-        return createNode('VecAssign', { id, exp, sig, assign })
-    }
-    / id:Id _ sig:("=" / "+=" / "-=") _ assign:Assignment {
-        return createNode('VarAssign', { id, sig, assign })
-    }
-    / id:Id id2:("." id2:Id { return id2 })+ _ sig:("=" / "+=" / "-=") _ assign:Assignment {
-        return createNode('StructAssign', { id, id2, sig, assign })
+    = id:Callee _ sig:("=" / "+=" / "-=") _ assign:Assignment {
+        if (id instanceof nodes.VarValue) {
+            return createNode('VarAssign', { id: id.id, sig, assign })
+        } else if (id instanceof nodes.Get) {
+            return createNode('Set', { object: id.object, property: id.property, value: assign, sig })
+        }
     }
     / Ternary
 
@@ -339,7 +271,7 @@ Sum
 
 Mul
     = le:Unary expansion:(
-        _ op:("*" / "/") _ ri:Unary { return { type: op, ri } }
+        _ op:("*" / "/" / "%") _ ri:Unary { return { type: op, ri } }
     )* {
         return expansion.reduce(
             (acc, curr) => {
@@ -352,9 +284,40 @@ Mul
 
 
 Unary
-    = "-" _ dt:DataType { return createNode('Unary', { op: '-', exp: dt }) }
-    / "!" _ dt:DataType { return createNode('Unary', { op: '!', exp: dt }) }
-    / DataType
+    = "-" _ dt:Unary { return createNode('Unary', { op: '-', exp: dt }) }
+    / "!" _ dt:Unary { return createNode('Unary', { op: '!', exp: dt }) }
+    / ArrMethods
+
+ArrMethods
+    = Callee _ "." _ method:("indexOf"/"length"/"Join") exp:( "(" _ arg:Expression? _ ")" { return arg })? {
+        return createNode('ArrMethods', { callee: Callee, method, exp })
+    }
+    / Callee
+/* ------------------------------------------------------------------------------------------------------------------ */
+
+/* ------------------------------------------------------Callee------------------------------------------------------ */
+Callee = initial:DataType _ operations:(
+        ("(" _ args:Arguments? _ ")" { return { type: 'call', args: args || [] } })
+        / ("." _ id:("length"/ArrayMethods/Id/Callee) { return { type: 'access', id } })
+        / ("[" _ index:Expression _ "]" { return { type: 'index', index } })
+    )* {
+        return operations.reduce(
+            (objective, args) => {
+                const { type, id, index, args: argsList } = args
+                if (type === 'call') {
+                    return createNode('Callee', { callee:objective , args: argsList || [] })
+                } else if (type === 'index') {
+                    return createNode('Get', { object:objective , property:index })
+                } else if (type === 'access') {
+                    return createNode('Get', { object:objective , property:id })
+                }
+            },
+            initial
+        )
+    }
+
+
+
 /* ------------------------------------------------------------------------------------------------------------------ */
 
 /* -----------------------------------------------------DataType----------------------------------------------------- */
@@ -365,47 +328,52 @@ DataType
     / Char
     / Null
     / Group
-    / VecInitialization
-    / VecMethods
+    / ArrayInstance
+    / Instance
+    / typeof
     / IdValue
 
-VecMethods
-    = IndexOf
-    / Join
-    / Length
-
-IndexOf
-    = id:Id "." "indexOf" _ "(" _ exp:Expression _ ")" {
-            return createNode('VecIndexOf', { id, exp })
+ArrayInstance
+    = "{" _ args:Arguments _  "}" {
+        return createNode('ArrayInstance', { args })
     }
-    / id:Id _ "[" _ exp:Expression _ "]" "." "indexOf" _ "(" _ exp2:Expression _ ")" {
-            return createNode('MatIndexOf', { id, exp, exp2 })
+    / "new" _ type:(Types / "var" / Id) _ dim:( "[" _ exp:Expression _ "]" { return exp })+ {
+        return createNode('ArrayInstance', { type, dim })
     }
 
-Join
-    = id:Id "." "join" _ "(" _ ")" {
-            return createNode('VecJoin', { id })
-    }
-    / id:Id _ "[" _ exp:Expression _ "]" "." "join" _ "(" _ ")" {
-            return createNode('MatJoin', { id, exp })
+Instance
+    = id:Id _ "{" _ args:Attributes "}" {
+        return createNode('Instance', { id, args: args || [] })
     }
 
-Length
-    = id:Id "." "length" {
-            return createNode('VecLength', { id })
-    }
-    / id:Id _ "[" _ exp:Expression _ "]" "." "length" {
-            return createNode('MatLength', { id, exp })
+Attributes
+    = head:Attribute _ tail:( "," _ Attr:Attribute _ { return Attr })* {
+        return [head, ...tail]
     }
 
+Attribute
+    = id:Id _ ":" _ assign:Expression {
+        return createNode('VarAssign', { id, sig:"=", assign })
+    }
+
+ArrayMethods
+    = method:("indexOf"/"length"/"join") exp:( "(" _ arg:Expression? _ ")" { return arg })? {
+        const varValue = createNode('VarValue', { id:method })
+        return createNode('Callee', { callee: varValue, args: exp ? [exp] : [] })
+    }
+
+typeof
+    = id:"typeof" _ exp:Expression  {
+         const varValue = createNode('VarValue', { id })
+         return createNode('Callee', { callee: varValue, args: [exp] || [] })
+    }
 
 IdValue
-    = id:Id _ "[" _ exp1:Expression _ "]" _ "[" _ exp2:Expression _ "]" {
-        return createNode('MatValue', { id, exp1, exp2 })
+    =
+    id:"Object.keys" {
+        return createNode('VarValue', { id })
     }
-    / id:Id _ "[" _ exp:Expression _ "]" {
-        return createNode('VecValue', { id, exp })
-    }
+
     / id:Id {
         return createNode('VarValue', { id })
     }
@@ -471,6 +439,22 @@ _
 Types
     = ("int" / "float" / "bool" / "string" / "char" / "void") { return text(); }
 
+Separator
+    = [ \t\n\r]+ / ";" / "(" / ")" / "{" / "}"
+    / "," / "." / "=" / "!" / "+" / "-" / "*"
+    / "/" / "<" / ">" / "<=" / ">=" / "==" / "!="
+    / "&&" / "||" / "?" / ":" / "++" / "--"
+    / "[" / "]"
+
+ReservedWord
+    = "if" / "else" / "while" / "for" / "return" / "switch"
+    / "case" / "default" / "break" / "continue" / "struct"
+    / "var" / "true" / "false" / "null" / "System.out.println"
+
 Id
+    = !(ReservedWord Separator) id:Identifier { return id; }
+
+Identifier
     = [a-zA-Z_][a-zA-Z0-9_]* { return text(); }
+
 /* ------------------------------------------------------------------------------------------------------------------ */
