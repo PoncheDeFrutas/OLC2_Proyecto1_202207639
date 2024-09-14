@@ -1,6 +1,13 @@
-import {Literal} from "../ast/nodes.js";
-import {ArrayListInstance} from "./StructInstance.js";
+import { Literal } from "../ast/nodes.js";
+import { ArrayListInstance } from "./StructInstance.js";
 
+/**
+ * Clones a Literal object, including its value and type.
+ *
+ * @param {Literal} literal - The Literal object to clone.
+ * @returns {Literal} A new Literal object with the cloned value and type.
+ * @throws {Error} If the provided argument is not an instance of Literal.
+ */
 export function cloneLiteral(literal) {
     if (!(literal instanceof Literal)) {
         throw new Error('Expected instance of Literal');
@@ -17,6 +24,12 @@ export function cloneLiteral(literal) {
     return new Literal({ value: clonedValue, type: literal.type });
 }
 
+/**
+ * Clones a value, handling instances of Literal, ArrayListInstance, and other types.
+ *
+ * @param {*} value - The value to clone.
+ * @returns {*} The cloned value.
+ */
 function cloneValue(value) {
     if (value instanceof Literal) {
         return cloneLiteral(value);
@@ -29,6 +42,13 @@ function cloneValue(value) {
     }
 }
 
+/**
+ * Clones an ArrayListInstance object, including its class instance and properties.
+ *
+ * @param {ArrayListInstance} arrayListInstance - The ArrayListInstance object to clone.
+ * @returns {ArrayListInstance} A new ArrayListInstance object with cloned properties.
+ * @throws {Error} If the provided argument is not an instance of ArrayListInstance.
+ */
 function cloneArrayListInstance(arrayListInstance) {
     if (!(arrayListInstance instanceof ArrayListInstance)) {
         throw new Error('Expected instance of ArrayListInstance');
