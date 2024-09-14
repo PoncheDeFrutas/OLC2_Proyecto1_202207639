@@ -1,8 +1,16 @@
+/**
+ * @module Environment
+ */
 
+import { LocationError } from "../reports/Errors.js";
+
+/**
+ * Class representing an environment for variable storage and lookup.
+ */
 export class Environment {
-
     /**
-     * @param {Environment} parent
+     * Create an environment.
+     * @param {Environment|null} [parent=null] - The parent environment.
      */
     constructor(parent = null) {
         this.name = '';
@@ -11,41 +19,49 @@ export class Environment {
     }
 
     /**
-     * @param {string} name
-     * @param {any} value
-     * @returns {any}
+     * Set a variable in the environment.
+     * @param {string} name - The name of the variable.
+     * @param {any} value - The value of the variable.
+     * @param {VariableTracker} tracker - The tracker for variable changes.
+     * @param {Object} location - The location information for error reporting.
+     * @throws {LocationError} If the variable already exists.
      */
-    setVariable(name, value) {
-        if (this.table[name]) {
-            throw new Error(`Variable ${name} already exists in this scope`);
+    set(name, value, tracker, location) {
+        if (this.table.hasOwnProperty(name)) {
+            throw new LocationError(`Variable ${name} already exists`, location);
         }
+        tracker.track(name, value, this.name, location);
         this.table[name] = value;
     }
 
     /**
-     * @param {string} name
-     * @returns {any}
+     * Get a variable from the environment.
+     * @param {string} name - The name of the variable.
+     * @param {Object} location - The location information for error reporting.
+     * @returns {any} The value of the variable.
+     * @throws {LocationError} If the variable is not found.
      */
-    getVariable(name) {
-        const value = this.table[name];
-
-        if (value) return value;
-
-        if (this.prev) {
-            return this.prev.getVariable(name);
+    get(name, location) {
+        if (this.table.hasOwnProperty(name)) {
+            return this.table[name];
         }
 
-        throw new Error(`Variable ${name} not found`);
+        if (this.prev) {
+            return this.prev.get(name, location);
+        }
+
+        throw new LocationError(`Variable ${name} not found`, location);
     }
 
     /**
-     * @param {string} name
-     * @param {any} value
+     * Assign a value to an existing variable in the environment.
+     * @param {string} name - The name of the variable.
+     * @param {any} value - The new value of the variable.
+     * @param {Object} location - The location information for error reporting.
+     * @throws {LocationError} If the variable is not found.
      */
-    assignVariable(name, value) {
-        const variable = this.table[name];
-
-        if (variable) {
+    assign(name, value, location) {
+        if (this.table.hasOwnProperty(name)) {
             if (this.table[name].type !== value.type) {
                 this.table[name].value = null;
                 return;
@@ -55,10 +71,10 @@ export class Environment {
         }
 
         if (this.prev) {
-            this.prev.assignVariable(name, value);
+            this.prev.assign(name, value, location);
             return;
         }
 
-        throw new Error(`Variable ${name} not found`);
+        throw new LocationError(`Variable ${name} not found`, location);
     }
 }
