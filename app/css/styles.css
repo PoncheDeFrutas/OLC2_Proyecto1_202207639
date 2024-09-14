@@ -50,21 +50,11 @@ body {
     border-color: #666;
 }
 
-.header .report-btn {
-    display: none;
-}
 
 .header .view-btn {
     display: inline-block;
 }
 
-.single-view .header .view-btn {
-    display: none;
-}
-
-.single-view .header .report-btn {
-    display: inline-block;
-}
 
 .container {
     display: flex;
@@ -236,27 +226,4 @@ textarea::placeholder {
 
 #back-to-editor:hover {
     background-color: #0056b3;
-}
-
-.single-view {
-    display: flex;
-    flex-direction: column;
-    background-color: #2e2e2e;
-}
-
-.single-view .left-section,
-.single-view .divider,
-.single-view .right-section {
-    display: none;
-}
-
-.single-view .single-section {
-    flex: 1;
-    background-color: #2e2e2e;
-    color: #ffffff;
-}
-
-.single-view .info-area {
-    height: 100%;
-    background-color: #2e2e2e;
 }

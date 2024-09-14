@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const openFileButton = document.getElementById('open-file');
     const fileInput = document.getElementById('file-input');
     const saveFileButton = document.getElementById('save-file');
-    const viewSingleButton = document.getElementById('view-single');
-    const viewDoubleButton = document.getElementById('view-double');
 
     if (openFileButton && fileInput) {
         openFileButton.addEventListener('click', () => {
@@ -39,18 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saveFileButton) {
         saveFileButton.addEventListener('click', () => {
             saveFile();
-        });
-    }
-
-    if (viewSingleButton) {
-        viewSingleButton.addEventListener('click', () => {
-            setViewMode('single');
-        });
-    }
-
-    if (viewDoubleButton) {
-        viewDoubleButton.addEventListener('click', () => {
-            setViewMode('double');
         });
     }
 });
@@ -100,18 +86,6 @@ function saveFile() {
         URL.revokeObjectURL(url);
     } else {
         alert('No hay ninguna pestaña activa para guardar.');
-    }
-}
-
-function setViewMode(mode) {
-    const editorContainer = document.getElementById('editor-container');
-
-    if (mode === 'single') {
-        editorContainer.classList.add('single-view');
-        editorContainer.classList.remove('double-view');
-    } else if (mode === 'double') {
-        editorContainer.classList.add('double-view');
-        editorContainer.classList.remove('single-view');
     }
 }
 

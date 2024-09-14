@@ -15,32 +15,69 @@ import {AbstractInstance} from "../instructions/AbstractInstance.js";
 import {ArrayList} from "../instructions/ArrayList.js";
 import {ArrayListInstance} from "../instructions/StructInstance.js";
 import {cloneLiteral} from "../instructions/clone.js";
+import {VariableTracker} from "../reports/Symbols.js";
+import {LocationError} from "../reports/Errors.js";
 
+/**
+ * InterpreterVisitor class is responsible for interpreting and executing code.
+ * It manages the environment, variable tracking, and console output.
+ *
+ * @extends BaseVisitor
+ */
 export class InterpreterVisitor extends BaseVisitor {
-    
+
+    /**
+     * Creates an instance of InterpreterVisitor.
+     * Initializes the global environment, registers native functions,
+     * and sets up the console output. Also manages the state of 'continue' statements.
+     */
     constructor() {
         super();
+
+        /**
+         * The environment in which the code is executed.
+         * Initialized as a new Environment instance with the name 'Global'.
+         *
+         * @type {Environment}
+         */
         this.Environment = new Environment();
+        this.Environment.name = 'Global';
+
+        /**
+         * Tracks variables and their metadata during execution.
+         *
+         * @type {VariableTracker}
+         */
+        this.Symbols = new VariableTracker();
+
+        /**
+         * Accumulates console output during execution.
+         *
+         * @type {string}
+         */
         this.Console = '';
 
         /**
-         * 
+         * Registers native functions (e.g., `parseInt`, `toString`) in the environment.
+         *
+         * @type {void}
          */
         Object.entries(Natives).forEach(([name, func]) => {
-           this.Environment.set(name, func);
+            this.Environment.set(name, func, this.Symbols, null);
         });
-        
+
         /**
+         * Keeps track of the state related to 'continue' statements.
+         *
          * @type {Expression|null}
          */
         this.prevContinue = null;
     }
-
     /**
      * @type [BaseVisitor['visitExpression']]
      */
     visitExpression(node) {
-        throw new Error('Method visitExpression not implemented');
+        throw new LocationError('Method visitExpression not implemented');
     }
 
     /**
@@ -58,10 +95,10 @@ export class InterpreterVisitor extends BaseVisitor {
         const right = node.right.accept(this);
 
         if (!(left instanceof Literal) || !(right instanceof Literal)) {
-            throw new Error('Literal expected in arithmetic operation');
+            throw new LocationError('Literal expected in arithmetic operation', node.location);
         }
 
-        return ArithmeticOperation(node.op, left, right);
+        return ArithmeticOperation(node.op, left, right, node.location);
     }
 
     /**
@@ -72,10 +109,10 @@ export class InterpreterVisitor extends BaseVisitor {
         const right = node.right.accept(this);
         
         if (!(left instanceof Literal) || !(right instanceof Literal)) {
-            throw new Error('Literal expected in relational operation');
+            throw new LocationError('Literal expected in relational operation', node.location);
         }
         
-        return RelationalOperation(node.op, left, right);
+        return RelationalOperation(node.op, left, right, node.location);
     }
     
     /**
@@ -86,10 +123,10 @@ export class InterpreterVisitor extends BaseVisitor {
         const right = node.right.accept(this);
 
         if (!(left instanceof Literal) || !(right instanceof Literal)) {
-            throw new Error('Logical operation with non-literal operands');
+            throw new LocationError('Literal expected in logical operation', node.location);
         }
 
-        return LogicalOperation(node.op, left, right);
+        return LogicalOperation(node.op, left, right, node.location);
     }
     
     /**
@@ -101,10 +138,10 @@ export class InterpreterVisitor extends BaseVisitor {
         const ext = node.exp.accept(this);
 
         if (!(ext instanceof Literal)) {
-            throw new Error('Expected literal in unary expression');
+           throw new LocationError('Literal expected in unary operation', node.location);
         }
 
-        return UnaryOperation(node.op, ext);
+        return UnaryOperation(node.op, ext, node.location);
     }
 
     /**
@@ -177,7 +214,7 @@ export class InterpreterVisitor extends BaseVisitor {
         const condition = node.cond.accept(this);
         
         if (!(condition instanceof Literal) || condition.type !== 'bool') {
-            throw new Error('Expected boolean expression in if statement');
+            throw new LocationError('Expected boolean expression in if statement', node.location);
         }
         
         const stmt = condition.value ? node.stmtThen : node.stmtElse
@@ -210,7 +247,7 @@ export class InterpreterVisitor extends BaseVisitor {
         const cond = node.cond.accept(this);
 
         if (!(cond instanceof Literal)) {
-            throw new Error('Expected literal in switch statement');
+            throw new LocationError('Expected literal in switch statement', node.location);
         }
 
         let foundMatch = false;
@@ -248,13 +285,13 @@ export class InterpreterVisitor extends BaseVisitor {
         const cond = node.cond.accept(this);
 
         if (!(cond instanceof Literal) || cond.type !== 'bool') {
-            throw new Error('Expected boolean expression in ternary operator');
+            throw new LocationError('Expected boolean expression in ternary operator', node.location);
         }
 
         const res = cond.value ? node.trueExp.accept(this) : node.falseExp.accept(this);
 
         if (!(res instanceof Literal)) {
-            throw new Error('Expected literal in ternary operator');
+            throw new LocationError('Literal expected in ternary operator', node.location);
         }
 
         return res;
@@ -269,11 +306,11 @@ export class InterpreterVisitor extends BaseVisitor {
         let cond = node.cond.accept(this);
         
         if (!(cond instanceof Literal) || cond.type !== 'bool') {
-            throw new Error('Expected boolean expression in while loop');
+            throw new LocationError('Expected boolean expression in while loop', node.location);
         }
         
         if (!node.stmt){
-            throw new Error('Expected statement in while loop');
+            throw new LocationError('Expected statement in while loop', node.location);
         }
 
         const lastEnvironment = this.Environment
@@ -298,15 +335,15 @@ export class InterpreterVisitor extends BaseVisitor {
         if (!node) return null;
         
         if (!(node.init instanceof VarDeclaration) && !(node.init instanceof VarAssign)) {
-            throw new Error('Invalid initialization in for loop');
+            throw new LocationError('Invalid initialization in for loop', node.location);
         }
         
         if (!(node.cond instanceof Logical) && !(node.cond instanceof Relational)) {
-            throw new Error('Expected logical expression in for loop');
+            throw new LocationError('Expected logical expression in for loop', node.location);
         }
         
         if (!(node.update instanceof VarAssign)) {
-            throw new Error('Invalid update in for loop');
+            throw new LocationError('Invalid update in for loop', node.location);
         }
         
         const lastIncrement = this.prevContinue;
@@ -339,13 +376,13 @@ export class InterpreterVisitor extends BaseVisitor {
         if (!node) return null;
         
         if (!(node.vd instanceof VarDeclaration)) {
-            throw new Error('Invalid initialization in foreach loop');
+            throw new LocationError('Invalid initialization in foreach loop', node.location);
         }
 
         const array = node.array.accept(this);
 
         if (!(array instanceof Literal) || !(array.value.properties instanceof Array)) {
-            throw new Error('Expected array in foreach loop');
+            throw new LocationError('Expected array in foreach loop', node.location);
         }
 
         const elements = array.value.properties;
@@ -407,16 +444,16 @@ export class InterpreterVisitor extends BaseVisitor {
             }
         }
 
-        const result = VarDeclarationF(node.type, node.id, value);
+        const result = VarDeclarationF(node.type, node.id, value, node.location);
 
-        this.Environment.set(node.id, result);
+        this.Environment.set(node.id, result, this.Symbols, node.location);
     }
 
     /**
      * @type [BaseVisitor['visitVarValue']]
      */
     visitVarValue(node) {
-        return this.Environment.get(node.id)
+        return this.Environment.get(node.id, node.location);
     }
 
     /**
@@ -426,21 +463,21 @@ export class InterpreterVisitor extends BaseVisitor {
         const value = node.assign.accept(this);
 
         if (!(value instanceof Literal)) {
-            throw new Error('Expected literal in variable assignment');
+            throw new LocationError('Expected literal in variable assignment', node.location);
         }
 
         const operations = {
             '=': () => value,
-            '+=': () => ArithmeticOperation('+', this.Environment.get(node.id), value),
-            '-=': () => ArithmeticOperation('-', this.Environment.get(node.id), value)
+            '+=': () => ArithmeticOperation('+', this.Environment.get(node.id, node.location), value, node.location),
+            '-=': () => ArithmeticOperation('-', this.Environment.get(node.id, node.location), value, node.location)
         };
 
         if (!(node.sig in operations)) {
-            throw new Error(`Unsupported operation: ${node.sig}`);
+            throw new LocationError(`Unsupported operation: ${node.sig}`, node.location);
         }
 
         const finalValue = operations[node.sig]();
-        this.Environment.assign(node.id, finalValue);
+        this.Environment.assign(node.id, finalValue, node.location);
 
         return finalValue;
     }
@@ -471,11 +508,11 @@ export class InterpreterVisitor extends BaseVisitor {
         const args = node.args.map(arg => arg.accept(this));
         
         if (!(func instanceof Invocable)) {
-            throw new Error('Expected invocable in function call');
+            throw new LocationError('Expected invocable in function call', node.location);
         }
         
         if (func.arity() !== args.length) {
-            throw new Error(`Expected ${func.arity()} arguments, got ${args.length}`);
+            throw new LocationError(`Expected ${func.arity()} arguments, got ${args.length}`, node.location);
         }
         
         return func.invoke(this, args);
@@ -487,7 +524,7 @@ export class InterpreterVisitor extends BaseVisitor {
     visitFuncDeclaration(node) {
         if (!node) return null;
         const func = new OutsiderFunction(node, this.Environment);
-        this.Environment.set(node.id, func);
+        this.Environment.set(node.id, func, this.Symbols, node.location);
     }
 
     /**
@@ -495,8 +532,12 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitStructDeclaration(node) {
         if (!node) return null;
-        const struct = new Struct(node, this.Environment)
-        this.Environment.set(node.id, struct)
+        if (this.Environment.name !== 'Global') {
+            throw new LocationError('Structs can only be declared in the global scope', node.location);
+        }
+        
+        const struct = new Struct(node, this.Environment);
+        this.Environment.set(node.id, struct, this.Symbols, node.location);
     }
 
     /**
@@ -504,10 +545,10 @@ export class InterpreterVisitor extends BaseVisitor {
      */
     visitInstance(node) {
         if (!node) return null;
-        const struct = this.Environment.get(node.id);
+        const struct = this.Environment.get(node.id, node.location);
 
         if (!(struct instanceof Struct)) {
-            throw new Error('Expected struct in instance creation');
+            throw new LocationError('Expected struct in instance creation', node.location);
         }
         
         return new Literal({type: node.id, value: struct.invoke(this, node.args)});
@@ -521,11 +562,11 @@ export class InterpreterVisitor extends BaseVisitor {
         const instance = node.object.accept(this);
 
         if (!(instance instanceof Literal)) {
-            throw new Error('Expected literal in get operation');
+            throw new LocationError('Expected literal in get operation', node.location);
         }
 
         if (!(instance.value instanceof AbstractInstance)) {
-            throw new Error('Expected struct in get operation');
+            throw new LocationError('Expected struct in get operation', node.location);
         }
 
         if (node.property instanceof Callee) {
@@ -534,10 +575,10 @@ export class InterpreterVisitor extends BaseVisitor {
         }
 
         if (node.property instanceof VarValue) {
-            return instance.value.get(node.property.accept(this));
+            return instance.value.get(node.property.accept(this), node.location);
         }
         
-        return instance.value.get(node.property);
+        return instance.value.get(node.property, node.location);
     }
 
     /**
@@ -548,28 +589,28 @@ export class InterpreterVisitor extends BaseVisitor {
         const instance = node.object.accept(this);
 
         if (!(instance instanceof Literal)) {
-            throw new Error('Expected literal in set operation');
+            throw new LocationError('Expected literal in set operation', node.location);
         }
 
         if (!(instance.value instanceof AbstractInstance) && !(instance.value instanceof Array)) {
-            throw new Error('Expected struct in set operation');
+            throw new LocationError('Expected struct in set operation', node.location);
         }
 
         const value = node.value.accept(this);
 
         const operations = {
             '=': () => value,
-            '+=': () => ArithmeticOperation('+', instance.value.get(node.property), value),
-            '-=': () => ArithmeticOperation('-', instance.value.get(node.property), value)
+            '+=': () => ArithmeticOperation('+', instance.value.get(node.property), value, node.location),
+            '-=': () => ArithmeticOperation('-', instance.value.get(node.property), value, node.location)
         };
 
         if (!(node.sig in operations)) {
-            throw new Error(`Unsupported operation: ${node.sig}`);
+            throw new LocationError(`Unsupported operation: ${node.sig}`, node.location);
         }
 
         const finalValue = operations[node.sig]();
         
-        instance.value.set(node.property, finalValue);
+        instance.value.set(node.property, finalValue, node.location);
         return finalValue;
     }
 
@@ -583,6 +624,6 @@ export class InterpreterVisitor extends BaseVisitor {
         
         const value = arrayList.invoke(this, node.args);
         
-        return new Literal({type:node.type, value});
+        return new Literal({type:node.type, value,});
     }
 }
